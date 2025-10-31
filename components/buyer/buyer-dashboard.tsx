@@ -23,7 +23,7 @@ export function BuyerDashboard() {
       </div>
 
       {/* Hero Section */}
-      <div className="rounded-lg bg-gradient-to-r from-primary/10 to-accent/10 p-8">
+      <div className="rounded-lg bg-gradient-r from-primary/10 to-accent/10 p-8">
         <h2 className="text-2xl font-bold text-foreground">Discover Fresh Products</h2>
         <p className="mt-2 text-muted-foreground">Browse fresh products from local vendors in your area</p>
         <Link href="/products">
