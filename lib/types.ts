@@ -22,16 +22,27 @@ export interface Location {
 }
 
 export interface Vendor {
-  id: string
-  name: string
-  logo: string
-  banner: string
-  rating: number
+  stall_id: string
+  stall_name: string
+  vendor_name: string
+  stall_description: string
+  category: string
   location: string
-  description: string
-  contactInfo: string
-  totalSales: number
-  revenue: number
+  banner_photo: string
+  stall_icon: string
+  rating: number
+  
+  //? Original interface
+  // id: string
+  // name: string
+  // logo: string
+  // banner: string
+  // rating: number
+  // location: string
+  // description: string
+  // contactInfo: string
+  // totalSales: number
+  // revenue: number
 }
 
 export interface Product {
