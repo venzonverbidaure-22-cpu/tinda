@@ -1,6 +1,7 @@
 "use client"
 
-import { mockVendors, mockProducts } from "@/lib/mock-data"
+import { use, useEffect, useState } from "react"
+import { Vendor, Product } from "@/lib/types"
 import { Navbar } from "@/components/navbar"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -12,10 +13,32 @@ interface VendorPageProps {
   params: Promise<{ id: string }>
 }
 
-export default async function VendorPage({ params }: VendorPageProps) {
-  const { id } = await params
-  const vendor = mockVendors.find((v) => v.id === id)
-  const vendorProducts = mockProducts.filter((p) => p.vendorId === id)
+export default function VendorPage({ params }: VendorPageProps) {
+  const { id } = use(params)
+  const [vendor, setVendor] = useState<Vendor | null>(null)
+  const [products, setProducts] = useState<Product[]>([])
+
+  useEffect(() => {
+    const fetchVendorAndProducts = async () => {
+      try {
+        // Fetch vendor data
+        const vendorResponse = await fetch(`/api/stalls?stall_id=${id}`)
+        const vendorData = await vendorResponse.json()
+        setVendor(vendorData[0])
+
+        // Fetch products for the vendor
+        const productsResponse = await fetch(`/api/products?stall_id=${id}`)
+        const productsData = await productsResponse.json()
+        setProducts(productsData)
+      } catch (error) {
+        console.error("Error fetching data:", error)
+      }
+    }
+
+    if (id) {
+      fetchVendorAndProducts()
+    }
+  }, [id])
 
   if (!vendor) {
     return (
@@ -23,10 +46,7 @@ export default async function VendorPage({ params }: VendorPageProps) {
         <Navbar />
         <div className="flex items-center justify-center px-6 py-16">
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-foreground">Vendor not found</h1>
-            <Link href="/">
-              <Button className="mt-4">Back to Home</Button>
-            </Link>
+            <h1 className="text-2xl font-bold text-foreground">Loading...</h1>
           </div>
         </div>
       </main>
@@ -46,7 +66,7 @@ export default async function VendorPage({ params }: VendorPageProps) {
 
         {/* Vendor Banner */}
         <div className="relative h-48 w-full overflow-hidden rounded-lg bg-muted">
-          <img src={vendor.banner || "/placeholder.svg"} alt={vendor.name} className="h-full w-full object-cover" />
+          <img src={vendor.banner_photo || "/placeholder.svg"} alt={vendor.stall_name} className="h-full w-full object-cover" />
         </div>
 
         {/* Vendor Info */}
@@ -55,12 +75,12 @@ export default async function VendorPage({ params }: VendorPageProps) {
           <div className="md:col-span-2">
             <div className="flex items-start gap-4">
               <img
-                src={vendor.logo || "/placeholder.svg"}
-                alt={vendor.name}
+                src={vendor.stall_icon || "/placeholder.svg"}
+                alt={vendor.stall_name}
                 className="h-20 w-20 rounded-full border-4 border-primary"
               />
               <div className="flex-1">
-                <h1 className="text-3xl font-bold text-foreground">{vendor.name}</h1>
+                <h1 className="text-3xl font-bold text-foreground">{vendor.stall_name}</h1>
                 <div className="mt-2 flex items-center gap-4">
                   <div className="flex items-center gap-1">
                     <Star className="h-5 w-5 fill-accent text-accent" />
@@ -71,7 +91,7 @@ export default async function VendorPage({ params }: VendorPageProps) {
                     <span>{vendor.location}</span>
                   </div>
                 </div>
-                <p className="mt-3 text-muted-foreground">{vendor.description}</p>
+                <p className="mt-3 text-muted-foreground">{vendor.stall_description}</p>
               </div>
             </div>
           </div>
@@ -82,7 +102,7 @@ export default async function VendorPage({ params }: VendorPageProps) {
             <div className="mt-4 space-y-3">
               <div className="flex items-center gap-2">
                 <Phone className="h-5 w-5 text-primary" />
-                <span className="text-sm text-muted-foreground">{vendor.contactInfo}</span>
+                <span className="text-sm text-muted-foreground">{vendor.vendor_name}</span>
               </div>
               <Button className="w-full" size="sm">
                 Message Vendor
@@ -94,10 +114,10 @@ export default async function VendorPage({ params }: VendorPageProps) {
         {/* Products Section */}
         <div>
           <h2 className="mb-6 text-2xl font-bold text-foreground">Available Products</h2>
-          {vendorProducts.length > 0 ? (
+          {products.length > 0 ? (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {vendorProducts.map((product) => (
-                <ProductCard key={product.id} product={product} />
+              {products.map((product) => (
+                <ProductCard key={product.product_id} product={product} />
               ))}
             </div>
           ) : (

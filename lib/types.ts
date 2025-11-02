@@ -46,14 +46,20 @@ export interface Vendor {
 }
 
 export interface Product {
-  id: string
-  vendorId: string
-  name: string
-  category: string
+  product_id: string
+  stall_id: string
+  product_name: string
   price: number
-  image: string
+  product_image: string
   description: string
   stock: number
+
+  //? original interface
+  // id: string
+  // vendorId: string
+  // name: string
+  // category: string
+  // image: string
 }
 
 export interface CartItem {
