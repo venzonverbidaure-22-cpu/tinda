@@ -31,6 +31,7 @@ export interface Vendor {
   banner_photo: string
   stall_icon: string
   rating: number
+  vendor_contact: string
   
   //? Original interface
   // id: string

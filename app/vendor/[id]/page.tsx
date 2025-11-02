@@ -102,7 +102,7 @@ export default function VendorPage({ params }: VendorPageProps) {
             <div className="mt-4 space-y-3">
               <div className="flex items-center gap-2">
                 <Phone className="h-5 w-5 text-primary" />
-                <span className="text-sm text-muted-foreground">{vendor.vendor_name}</span>
+                <span className="text-sm text-muted-foreground">{vendor.vendor_contact}</span>
               </div>
               <Button className="w-full" size="sm">
                 Message Vendor
