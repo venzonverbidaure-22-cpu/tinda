@@ -22,27 +22,45 @@ export interface Location {
 }
 
 export interface Vendor {
-  id: string
-  name: string
-  logo: string
-  banner: string
-  rating: number
+  stall_id: string
+  stall_name: string
+  vendor_name: string
+  stall_description: string
+  category: string
   location: string
-  description: string
-  contactInfo: string
-  totalSales: number
-  revenue: number
+  banner_photo: string
+  stall_icon: string
+  rating: number
+  vendor_contact: string
+  
+  //? Original interface
+  // id: string
+  // name: string
+  // logo: string
+  // banner: string
+  // rating: number
+  // location: string
+  // description: string
+  // contactInfo: string
+  // totalSales: number
+  // revenue: number
 }
 
 export interface Product {
-  id: string
-  vendorId: string
-  name: string
-  category: string
+  product_id: string
+  stall_id: string
+  product_name: string
   price: number
-  image: string
+  product_image: string
   description: string
   stock: number
+
+  //? original interface
+  // id: string
+  // vendorId: string
+  // name: string
+  // category: string
+  // image: string
 }
 
 export interface CartItem {
