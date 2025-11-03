@@ -24,26 +24,31 @@ export default function LoginPage() {
   const [error, setError] = useState("")
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError("")
-    setIsLoading(true)
+  e.preventDefault()
+  setError("")
+  setIsLoading(true)
 
-    try {
-      // Mock validation
-      if (!email || !password) {
-        setError("Please fill in all fields")
-        setIsLoading(false)
-        return
-      }
-
-      await login(email, password, role)
-      router.push("/")
-    } catch (err) {
-      setError("Login failed. Please try again.")
-    } finally {
-      setIsLoading(false)
+  try {
+    if (!email || !password) {
+      setError("Please fill in all fields")
+      return
     }
+
+    await login(email, password, role)
+
+    // ✅ Redirect by role
+    if (role === "vendor") {
+      router.push("/")
+    } else {
+      router.push("/")
+    }
+  } catch (err) {
+    console.error("Login failed:", err)
+    setError("Invalid email or password. Please try again.")
+  } finally {
+    setIsLoading(false)
   }
+}
 
   return (
     <div className="min-h-screen bg-background">
