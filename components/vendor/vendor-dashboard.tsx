@@ -34,7 +34,7 @@ export function VendorDashboard() {
         <Button onClick={() => setShowAddProduct(true)}>
           <Plus className="mr-2 h-4 w-4" />
           Add Product
-        </Button>
+        </Button>.
       </div>
 
       {/* Stats Cards */}
