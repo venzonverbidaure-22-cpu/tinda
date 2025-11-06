@@ -9,6 +9,7 @@ interface StallProfileCardProps {
   stallData?: {
     stall_name: string;
     stall_description: string;
+    icon_url?: string;
   } | null;
 }
 
@@ -33,8 +34,16 @@ export function StallProfileCard({ stallData }: StallProfileCardProps) {
         {/* Current Profile Preview */}
         <div className="rounded-lg border border-border bg-muted/30 p-4">
           <div className="flex items-start gap-4">
-            <div className="rounded-lg bg-primary/10 p-3">
-              <User className="h-6 w-6 text-primary" />
+            <div className="rounded-lg bg-primary/10 w-20 h-20 flex items-center justify-center">
+              {stallData?.icon_url ? (
+                <img
+                  src={`http://localhost:3001/${stallData.icon_url}`}
+                  alt="Stall Icon"
+                  className="h-full w-full object-cover rounded-lg"
+                />
+              ) : (
+                <User className="h-12 w-12 text-primary" />
+              )}
             </div>
             <div className="flex-1">
               <h4 className="font-semibold text-foreground">{stallData?.stall_name}</h4>

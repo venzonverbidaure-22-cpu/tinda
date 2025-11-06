@@ -106,120 +106,125 @@ export default function VendorStorePage() {
         <Card className="p-8">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-foreground">Store Information</h2>
-            <Button variant={isEditing ? "default" : "outline"} onClick={() => setIsEditing(!isEditing)}>
-              {isEditing ? "Save Changes" : "Edit Profile"}
-            </Button>
+            <div className="flex gap-3">
+              {isEditing ? (
+                <>
+                  <Button onClick={handleSave}>Save Changes</Button>
+                  <Button variant="outline" onClick={() => setIsEditing(false)} className="bg-transparent">
+                    Cancel
+                  </Button>
+                </>
+              ) : (
+                <Button variant="outline" onClick={() => setIsEditing(true)}>
+                  Edit Profile
+                </Button>
+              )}
+            </div>
           </div>
 
-          <div className="space-y-4">
-            {/* Store Name */}
-            <div>
-              <label className="text-sm font-medium text-foreground">Store Name</label>
-              <Input
-                value={storeData.name}
-                onChange={(e) => setStoreData({ ...storeData, name: e.target.value })}
-                disabled={!isEditing}
-                className="mt-2"
-              />
-            </div>
-
-            {/* Location */}
-            <div>
-              <label className="text-sm font-medium text-foreground">Location</label>
-              <Input
-                value={storeData.location}
-                onChange={(e) => setStoreData({ ...storeData, location: e.target.value })}
-                disabled={!isEditing}
-                className="mt-2"
-              />
-            </div>
-
-            {/* Description */}
-            <div>
-              <label className="text-sm font-medium text-foreground">Description</label>
-              <textarea
-                value={storeData.description}
-                onChange={(e) => setStoreData({ ...storeData, description: e.target.value })}
-                disabled={!isEditing}
-                className="mt-2 w-full rounded-md border border-input bg-background px-3 py-2 text-sm disabled:opacity-50"
-                rows={4}
-              />
-            </div>
-
-            {/* Category */}
-            <div>
-              <label className="text-sm font-medium text-foreground">Category</label>
-              <select
-                value={storeData.category}
-                onChange={(e) => setStoreData({ ...storeData, category: e.target.value })}
-                disabled={!isEditing}
-                className="mt-2 w-full rounded-md border border-input bg-background px-3 py-2 text-sm disabled:opacity-50"
-              >
-                <option value="Food">Food</option>
-                <option value="Clothing">Clothing</option>
-                <option value="Electronics">Electronics</option>
-                <option value="Other">Other</option>
-              </select>
-            </div>
-
-            {/* Icon Image */}
-            <div>
-              <label className="text-sm font-medium text-foreground">Icon Image</label>
-              {(preview.icon || storeData.icon_url) && (
-                <img
-                  src={preview.icon || `${BACKEND_URL}/${storeData.icon_url}`}
-                  alt="Icon Preview"
-                  className="mt-2 w-32 h-32 object-cover rounded-lg border"
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="space-y-4">
+              {/* Store Name */}
+              <div>
+                <label className="text-sm font-medium text-foreground">Store Name</label>
+                <Input
+                  value={storeData.name}
+                  onChange={(e) => setStoreData({ ...storeData, name: e.target.value })}
+                  disabled={!isEditing}
+                  className="mt-2"
                 />
-              )}
-              <Input
-                type="file"
-                onChange={(e) => handleFileChange("icon_image", e.target.files?.[0] ?? null)}
-                disabled={!isEditing}
-                className="mt-2"
-              />
-            </div>
-
-            {/* Banner Image */}
-            <div>
-              <label className="text-sm font-medium text-foreground">Banner Image</label>
-              {(preview.banner || storeData.banner_url) && (
-                <img
-                  src={preview.banner || `${BACKEND_URL}/${storeData.banner_url}`}
-                  alt="Banner Preview"
-                  className="mt-2 w-full h-48 object-cover rounded-lg border"
-                />
-              )}
-              <Input
-                type="file"
-                onChange={(e) => handleFileChange("banner_image", e.target.files?.[0] ?? null)}
-                disabled={!isEditing}
-                className="mt-2"
-              />
-            </div>
-
-            {/* Contact Info */}
-            <div>
-              <label className="text-sm font-medium text-foreground">Contact Information</label>
-              <Input
-                value={storeData.contactInfo}
-                onChange={(e) => setStoreData({ ...storeData, contactInfo: e.target.value })}
-                disabled={!isEditing}
-                className="mt-2"
-              />
-            </div>
-
-            {isEditing && (
-              <div className="flex gap-3 pt-4">
-                <Button onClick={handleSave} className="flex-1">
-                  Save Changes
-                </Button>
-                <Button variant="outline" onClick={() => setIsEditing(false)} className="flex-1 bg-transparent">
-                  Cancel
-                </Button>
               </div>
-            )}
+
+              {/* Location */}
+              <div>
+                <label className="text-sm font-medium text-foreground">Location</label>
+                <Input
+                  value={storeData.location}
+                  onChange={(e) => setStoreData({ ...storeData, location: e.target.value })}
+                  disabled={!isEditing}
+                  className="mt-2"
+                />
+              </div>
+
+              {/* Description */}
+              <div>
+                <label className="text-sm font-medium text-foreground">Description</label>
+                <textarea
+                  value={storeData.description}
+                  onChange={(e) => setStoreData({ ...storeData, description: e.target.value })}
+                  disabled={!isEditing}
+                  className="mt-2 w-full rounded-md border border-input bg-background px-3 py-2 text-sm disabled:opacity-50"
+                  rows={4}
+                />
+              </div>
+
+              {/* Category */}
+              <div>
+                <label className="text-sm font-medium text-foreground">Category</label>
+                <select
+                  value={storeData.category}
+                  onChange={(e) => setStoreData({ ...storeData, category: e.target.value })}
+                  disabled={!isEditing}
+                  className="mt-2 w-full rounded-md border border-input bg-background px-3 py-2 text-sm disabled:opacity-50"
+                >
+                  <option value="Food">Food</option>
+                  <option value="Clothing">Clothing</option>
+                  <option value="Electronics">Electronics</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
+              {/* Contact Info */}
+              <div>
+                <label className="text-sm font-medium text-foreground">Contact Information</label>
+                <Input
+                  value={storeData.contactInfo}
+                  onChange={(e) => setStoreData({ ...storeData, contactInfo: e.target.value })}
+                  disabled={!isEditing}
+                  className="mt-2"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              {/* Icon Image */}
+              <div>
+                <label className="text-sm font-medium text-foreground">Icon Image</label>
+                {(preview.icon || storeData.icon_url) && (
+                  <img
+                    src={preview.icon || `${BACKEND_URL}/${storeData.icon_url}`}
+                    alt="Icon Preview"
+                    className="mt-2 w-32 h-32 object-cover rounded-lg border"
+                  />
+                )}
+                <Input
+                  type="file"
+                  onChange={(e) => handleFileChange("icon_image", e.target.files?.[0] ?? null)}
+                  disabled={!isEditing}
+                  className="mt-2"
+                />
+              </div>
+
+              {/* Banner Image */}
+              <div>
+                <label className="text-sm font-medium text-foreground">Banner Image</label>
+                {(preview.banner || storeData.banner_url) && (
+                  <img
+                    src={preview.banner || `${BACKEND_URL}/${storeData.banner_url}`}
+                    alt="Banner Preview"
+                    className="mt-2 w-full h-48 object-cover rounded-lg border"
+                  />
+                )}
+                <Input
+                  type="file"
+                  onChange={(e) => handleFileChange("banner_image", e.target.files?.[0] ?? null)}
+                  disabled={!isEditing}
+                  className="mt-2"
+                />
+              </div>
+            </div>
           </div>
+
         </Card>
       </div>
     </main>
