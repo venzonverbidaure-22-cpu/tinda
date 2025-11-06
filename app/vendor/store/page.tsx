@@ -16,18 +16,26 @@ export default function VendorStorePage() {
     location: "",
     description: "",
     contactInfo: "",
+    category: "",
+    icon_image: null,
+    banner_image: null,
+    icon_url: "",
+    banner_url: "",
   })
 
   useEffect(() => {
     const fetchStoreData = async () => {
       try {
         const response = await axios.get("http://localhost:3001/api/stalls/1");
-        const { stall_name, stall_address, stall_description, vendor_contact } = response.data;
+        const { stall_name, stall_address, stall_description, vendor_contact, category, icon_url, banner_url } = response.data;
         setStoreData({
           name: stall_name,
           location: stall_address,
           description: stall_description,
           contactInfo: vendor_contact,
+          category: category,
+          icon_url: icon_url,
+          banner_url: banner_url,
         });
       } catch (error) {
         console.error("Error fetching store data:", error);
@@ -39,11 +47,23 @@ export default function VendorStorePage() {
 
   const handleSave = async () => {
     try {
-      const response = await axios.patch("http://localhost:3001/api/stalls/1", {
-        stall_name: storeData.name,
-        stall_address: storeData.location,
-        stall_description: storeData.description,
-        vendor_contact: storeData.contactInfo,
+      const formData = new FormData();
+      formData.append("stall_name", storeData.name);
+      formData.append("stall_address", storeData.location);
+      formData.append("stall_description", storeData.description);
+      formData.append("vendor_contact", storeData.contactInfo);
+      formData.append("category", storeData.category);
+      if (storeData.icon_image) {
+        formData.append("icon_image", storeData.icon_image);
+      }
+      if (storeData.banner_image) {
+        formData.append("banner_image", storeData.banner_image);
+      }
+
+      const response = await axios.patch("http://localhost:3001/api/stalls/1", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
       });
       console.log(response.data);
       setIsEditing(false)
@@ -109,6 +129,44 @@ export default function VendorStorePage() {
                 disabled={!isEditing}
                 className="mt-2 w-full rounded-md border border-input bg-background px-3 py-2 text-sm disabled:opacity-50"
                 rows={4}
+              />
+            </div>
+
+            {/* Category */}
+            <div>
+              <label className="text-sm font-medium text-foreground">Category</label>
+              <select
+                value={storeData.category}
+                onChange={(e) => setStoreData({ ...storeData, category: e.target.value })}
+                disabled={!isEditing}
+                className="mt-2 w-full rounded-md border border-input bg-background px-3 py-2 text-sm disabled:opacity-50"
+              >
+                <option value="Food">Food</option>
+                <option value="Clothing">Clothing</option>
+                <option value="Electronics">Electronics</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
+            {/* Icon Image */}
+            <div>
+              <label className="text-sm font-medium text-foreground">Icon Image</label>
+              <Input
+                type="file"
+                onChange={(e) => setStoreData({ ...storeData, icon_image: e.target.files?.[0] })}
+                disabled={!isEditing}
+                className="mt-2"
+              />
+            </div>
+
+            {/* Banner Image */}
+            <div>
+              <label className="text-sm font-medium text-foreground">Banner Image</label>
+              <Input
+                type="file"
+                onChange={(e) => setStoreData({ ...storeData, banner_image: e.target.files?.[0] })}
+                disabled={!isEditing}
+                className="mt-2"
               />
             </div>
 
