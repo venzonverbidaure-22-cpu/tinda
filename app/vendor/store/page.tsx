@@ -9,6 +9,8 @@ import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
 import axios from "axios"
 
+const BACKEND_URL = "http://localhost:3001";
+
 export default function VendorStorePage() {
   const [isEditing, setIsEditing] = useState(false)
   const [storeData, setStoreData] = useState({
@@ -17,18 +19,30 @@ export default function VendorStorePage() {
     description: "",
     contactInfo: "",
     category: "",
-    icon_image: null,
-    banner_image: null,
+    icon_image: null as File | null,
+    banner_image: null as File | null,
     icon_url: "",
     banner_url: "",
   })
+  const [preview, setPreview] = useState({
+    icon: "",
+    banner: "",
+  })
+
+  const handleFileChange = (field: "icon_image" | "banner_image", file: File | null) => {
+    if (file) {
+      setStoreData((prev) => ({ ...prev, [field]: file }))
+      setPreview((prev) => ({ ...prev, [field === "icon_image" ? "icon" : "banner"]: URL.createObjectURL(file) }))
+    }
+  }
 
   useEffect(() => {
     const fetchStoreData = async () => {
       try {
-        const response = await axios.get("http://localhost:3001/api/stalls/1");
+        const response = await axios.get(`${BACKEND_URL}/api/stalls/1`);
         const { stall_name, stall_address, stall_description, vendor_contact, category, icon_url, banner_url } = response.data;
         setStoreData({
+          ...storeData,
           name: stall_name,
           location: stall_address,
           description: stall_description,
@@ -60,7 +74,7 @@ export default function VendorStorePage() {
         formData.append("banner_image", storeData.banner_image);
       }
 
-      const response = await axios.patch("http://localhost:3001/api/stalls/1", formData, {
+      const response = await axios.patch(`${BACKEND_URL}/api/stalls/1`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -151,9 +165,16 @@ export default function VendorStorePage() {
             {/* Icon Image */}
             <div>
               <label className="text-sm font-medium text-foreground">Icon Image</label>
+              {(preview.icon || storeData.icon_url) && (
+                <img
+                  src={preview.icon || `${BACKEND_URL}/${storeData.icon_url}`}
+                  alt="Icon Preview"
+                  className="mt-2 w-32 h-32 object-cover rounded-lg border"
+                />
+              )}
               <Input
                 type="file"
-                onChange={(e) => setStoreData({ ...storeData, icon_image: e.target.files?.[0] })}
+                onChange={(e) => handleFileChange("icon_image", e.target.files?.[0] ?? null)}
                 disabled={!isEditing}
                 className="mt-2"
               />
@@ -162,9 +183,16 @@ export default function VendorStorePage() {
             {/* Banner Image */}
             <div>
               <label className="text-sm font-medium text-foreground">Banner Image</label>
+              {(preview.banner || storeData.banner_url) && (
+                <img
+                  src={preview.banner || `${BACKEND_URL}/${storeData.banner_url}`}
+                  alt="Banner Preview"
+                  className="mt-2 w-full h-48 object-cover rounded-lg border"
+                />
+              )}
               <Input
                 type="file"
-                onChange={(e) => setStoreData({ ...storeData, banner_image: e.target.files?.[0] })}
+                onChange={(e) => handleFileChange("banner_image", e.target.files?.[0] ?? null)}
                 disabled={!isEditing}
                 className="mt-2"
               />
