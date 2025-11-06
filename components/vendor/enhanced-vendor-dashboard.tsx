@@ -1,7 +1,6 @@
 "use client"
 
 import { useApp } from "@/lib/context"
-import { Navbar } from "@/components/navbar"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { ShopStatusCard } from "./shop-status-card"
@@ -28,8 +27,6 @@ export function EnhancedVendorDashboard() {
 
   return (
     <main className="min-h-screen bg-background">
-      <Navbar />
-
       <div className="space-y-8 px-6 py-8">
         {/* Header */}
         <div className="flex items-center justify-between">

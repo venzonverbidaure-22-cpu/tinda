@@ -80,7 +80,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const data = await res.json();
 
     if (!res.ok) {
-      throw new Error(data.error || "Login failed");
+      throw new Error(data.message || "Login failed");
     }
 
     const { user, token } = data;
