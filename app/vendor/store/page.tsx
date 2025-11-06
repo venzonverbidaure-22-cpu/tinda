@@ -4,22 +4,54 @@ import { Navbar } from "@/components/navbar"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
+import axios from "axios"
 
 export default function VendorStorePage() {
   const [isEditing, setIsEditing] = useState(false)
   const [storeData, setStoreData] = useState({
-    name: "Lola's Fresh Produce",
-    location: "Quiapo Market",
-    description: "Fresh vegetables and fruits sourced daily from local farms",
-    contactInfo: "09123456789",
+    name: "",
+    location: "",
+    description: "",
+    contactInfo: "",
   })
 
-  const handleSave = () => {
-    setIsEditing(false)
-    alert("Store profile updated successfully!")
+  useEffect(() => {
+    const fetchStoreData = async () => {
+      try {
+        const response = await axios.get("http://localhost:3001/api/stalls/1");
+        const { stall_name, stall_address, stall_description, vendor_contact } = response.data;
+        setStoreData({
+          name: stall_name,
+          location: stall_address,
+          description: stall_description,
+          contactInfo: vendor_contact,
+        });
+      } catch (error) {
+        console.error("Error fetching store data:", error);
+      }
+    };
+
+    fetchStoreData();
+  }, []);
+
+  const handleSave = async () => {
+    try {
+      const response = await axios.patch("http://localhost:3001/api/stalls/1", {
+        stall_name: storeData.name,
+        stall_address: storeData.location,
+        stall_description: storeData.description,
+        vendor_contact: storeData.contactInfo,
+      });
+      console.log(response.data);
+      setIsEditing(false)
+      alert("Store profile updated successfully!")
+    } catch (error) {
+      console.error("Error updating store data:", error);
+      alert("Error updating store data. Please try again.");
+    }
   }
 
   return (

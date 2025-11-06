@@ -11,6 +11,8 @@ import { VendorOrdersTable } from "./vendor-orders-table"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
 import { TrendingUp, ShoppingCart, Star } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useState, useEffect } from "react"
+import axios from "axios"
 
 const salesData = [
   { day: "Mon", sales: 4000 },
@@ -24,6 +26,20 @@ const salesData = [
 
 export function EnhancedVendorDashboard() {
   const { currentUser } = useApp()
+  const [stallData, setStallData] = useState(null);
+
+  useEffect(() => {
+    const fetchStallData = async () => {
+      try {
+        const response = await axios.get("http://localhost:3001/api/stalls/1");
+        setStallData(response.data);
+      } catch (error) {
+        console.error("Error fetching stall data:", error);
+      }
+    };
+
+    fetchStallData();
+  }, []);
 
   return (
     <main className="min-h-screen bg-background">
@@ -57,7 +73,7 @@ export function EnhancedVendorDashboard() {
 
               {/* Virtual Stall Profile - SCRUM-9 */}
               <div className="lg:col-span-2">
-                <StallProfileCard profileComplete={false} />
+                <StallProfileCard stallData={stallData} />
               </div>
             </div>
 

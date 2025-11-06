@@ -6,17 +6,14 @@ import { User, Edit, CheckCircle } from "lucide-react"
 import Link from "next/link"
 
 interface StallProfileCardProps {
-  profileComplete?: boolean
-  storeName?: string
-  description?: string
+  stallData?: {
+    stall_name: string;
+    stall_description: string;
+  } | null;
 }
 
-export function StallProfileCard({
-  profileComplete = false,
-  storeName = "Lola's Fresh Produce",
-  description = "Fresh vegetables and fruits sourced daily from local farms",
-}: StallProfileCardProps) {
-  const completionPercentage = profileComplete ? 100 : 60
+export function StallProfileCard({ stallData }: StallProfileCardProps) {
+  const completionPercentage = stallData ? 100 : 60
 
   return (
     <Card className="p-6">
@@ -24,7 +21,7 @@ export function StallProfileCard({
         <div>
           <div className="flex items-center gap-2">
             <h3 className="text-lg font-bold text-foreground">Virtual Stall Profile</h3>
-            {profileComplete && <CheckCircle className="h-5 w-5 text-green-600" />}
+            {stallData && <CheckCircle className="h-5 w-5 text-green-600" />}
           </div>
           <p className="mt-1 text-sm text-muted-foreground">
             Customers recognize and visit your shop through your stall profile
@@ -40,8 +37,8 @@ export function StallProfileCard({
               <User className="h-6 w-6 text-primary" />
             </div>
             <div className="flex-1">
-              <h4 className="font-semibold text-foreground">{storeName}</h4>
-              <p className="mt-1 text-sm text-muted-foreground line-clamp-2">{description}</p>
+              <h4 className="font-semibold text-foreground">{stallData?.stall_name}</h4>
+              <p className="mt-1 text-sm text-muted-foreground line-clamp-2">{stallData?.stall_description}</p>
             </div>
           </div>
         </div>
@@ -61,7 +58,7 @@ export function StallProfileCard({
         </div>
 
         {/* Missing Items */}
-        {!profileComplete && (
+        {stallData && (!stallData.stall_name || !stallData.stall_description) && (
           <div className="space-y-2 rounded-lg bg-amber-50 p-3">
             <p className="text-xs font-medium text-amber-900">Complete these to boost visibility:</p>
             <ul className="space-y-1 text-xs text-amber-700">
@@ -75,7 +72,7 @@ export function StallProfileCard({
         <Link href="/vendor/store" className="w-full">
           <Button variant="outline" className="w-full bg-transparent">
             <Edit className="mr-2 h-4 w-4" />
-            {profileComplete ? "Update Profile" : "Complete Profile"}
+            {stallData ? "Update Profile" : "Complete Profile"}
           </Button>
         </Link>
       </div>
