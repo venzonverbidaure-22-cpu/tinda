@@ -2,19 +2,66 @@
 
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { User, Edit, CheckCircle } from "lucide-react"
+import { User, Edit, CheckCircle, ChevronsUpDown } from "lucide-react"
 import Link from "next/link"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { useState, useEffect } from "react"
+import axios from "axios"
 
-interface StallProfileCardProps {
-  stallData?: {
-    stall_name: string;
-    stall_description: string;
-    icon_url?: string;
-  } | null;
+const BACKEND_URL = "http://localhost:3001";
+
+interface Stall {
+  stall_id: string;
+  stall_name: string;
+  stall_description: string;
+  icon_url?: string;
 }
 
-export function StallProfileCard({ stallData }: StallProfileCardProps) {
-  const completionPercentage = stallData ? 100 : 60
+export function StallProfileCard() {
+  const [stalls, setStalls] = useState<Stall[]>([]);
+  const [selectedStall, setSelectedStall] = useState<Stall | null>(null);
+
+  useEffect(() => {
+    const fetchStalls = async () => {
+      try {
+        const response = await axios.get(`${BACKEND_URL}/api/stalls/vendor/1`);
+        const sortedStalls = response.data.sort((a: Stall, b: Stall) => a.stall_name.localeCompare(b.stall_name));
+        setStalls(sortedStalls);
+
+        const savedStallId = localStorage.getItem("selectedStallId");
+        if (savedStallId) {
+          const savedStall = sortedStalls.find((s: Stall) => s.stall_id === Number(savedStallId));
+          if (savedStall) {
+            setSelectedStall(savedStall);
+          } else if (sortedStalls.length > 0) {
+            setSelectedStall(sortedStalls[0]);
+          }
+        } else if (sortedStalls.length > 0) {
+          setSelectedStall(sortedStalls[0]);
+        }
+      } catch (error) {
+        console.error("Error fetching stalls:", error);
+      }
+    };
+
+    fetchStalls();
+  }, []);
+
+  const handleStallChange = (stallId: string) => {
+    const stall = stalls.find((s) => String(s.stall_id) === stallId);
+    setSelectedStall(stall || null);
+    if (stall) {
+      localStorage.setItem("selectedStallId", stall.stall_id);
+    }
+  };
+
+  const completionPercentage = selectedStall ? 100 : 60
 
   return (
     <Card className="p-6">
@@ -22,11 +69,25 @@ export function StallProfileCard({ stallData }: StallProfileCardProps) {
         <div>
           <div className="flex items-center gap-2">
             <h3 className="text-lg font-bold text-foreground">Virtual Stall Profile</h3>
-            {stallData && <CheckCircle className="h-5 w-5 text-green-600" />}
+            {selectedStall && <CheckCircle className="h-5 w-5 text-green-600" />}
           </div>
           <p className="mt-1 text-sm text-muted-foreground">
             Customers recognize and visit your shop through your stall profile
           </p>
+        </div>
+        <div className="w-48">
+          <Select onValueChange={handleStallChange} value={String(selectedStall?.stall_id)}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select a stall" />
+            </SelectTrigger>
+            <SelectContent>
+              {stalls.map((stall) => (
+                <SelectItem key={stall.stall_id} value={String(stall.stall_id)}>
+                  {stall.stall_name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
@@ -35,9 +96,9 @@ export function StallProfileCard({ stallData }: StallProfileCardProps) {
         <div className="rounded-lg border border-border bg-muted/30 p-4">
           <div className="flex items-start gap-4">
             <div className="rounded-lg bg-primary/10 w-20 h-20 flex items-center justify-center">
-              {stallData?.icon_url ? (
+              {selectedStall?.icon_url ? (
                 <img
-                  src={`http://localhost:3001/${stallData.icon_url}`}
+                  src={`${BACKEND_URL}/${selectedStall.icon_url}`}
                   alt="Stall Icon"
                   className="h-full w-full object-cover rounded-lg"
                 />
@@ -46,8 +107,8 @@ export function StallProfileCard({ stallData }: StallProfileCardProps) {
               )}
             </div>
             <div className="flex-1">
-              <h4 className="font-semibold text-foreground">{stallData?.stall_name}</h4>
-              <p className="mt-1 text-sm text-muted-foreground line-clamp-2">{stallData?.stall_description}</p>
+              <h4 className="font-semibold text-foreground">{selectedStall?.stall_name}</h4>
+              <p className="mt-1 text-sm text-muted-foreground line-clamp-2">{selectedStall?.stall_description}</p>
             </div>
           </div>
         </div>
@@ -67,7 +128,7 @@ export function StallProfileCard({ stallData }: StallProfileCardProps) {
         </div>
 
         {/* Missing Items */}
-        {stallData && (!stallData.stall_name || !stallData.stall_description) && (
+        {selectedStall && (!selectedStall.stall_name || !selectedStall.stall_description) && (
           <div className="space-y-2 rounded-lg bg-amber-50 p-3">
             <p className="text-xs font-medium text-amber-900">Complete these to boost visibility:</p>
             <ul className="space-y-1 text-xs text-amber-700">
@@ -78,10 +139,10 @@ export function StallProfileCard({ stallData }: StallProfileCardProps) {
           </div>
         )}
 
-        <Link href="/vendor/store" className="w-full">
+        <Link href={`/vendor/store/${selectedStall?.stall_id}`} className="w-full">
           <Button variant="outline" className="w-full bg-transparent">
             <Edit className="mr-2 h-4 w-4" />
-            {stallData ? "Update Profile" : "Complete Profile"}
+            {selectedStall ? "Update Profile" : "Complete Profile"}
           </Button>
         </Link>
       </div>
