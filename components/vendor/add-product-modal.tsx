@@ -6,12 +6,30 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
 import { X } from "lucide-react"
+import { triggerProductListingsRefresh } from "./product-listing"
+import { useApp } from "@/lib/context" // <<< added to get currentUser
+
+// === Added type definitions ===
+interface CurrentUser {
+  user_id: number
+  full_name: string
+  email: string
+  stall_id?: number // optional since not all users have a stall
+  stall?: {
+    stall_id: number
+    stall_name?: string
+  }
+}
+
+// Dummy declaration for type registration
+const dummy: CurrentUser | null = null
 
 interface AddProductModalProps {
   onClose: () => void
 }
 
 export function AddProductModal({ onClose }: AddProductModalProps) {
+  const { currentUser } = useApp() as { currentUser: CurrentUser | null } // Typed context
   const [formData, setFormData] = useState({
     name: "",
     category: "",
@@ -25,12 +43,44 @@ export function AddProductModal({ onClose }: AddProductModalProps) {
     e.preventDefault()
     setIsSubmitting(true)
 
-    // Simulate product creation
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    // === Modified: support both nested or flat stall_id ===
+    const stallId = currentUser?.stall_id || currentUser?.stall?.stall_id
+    if (!stallId) {
+      alert("No stall found for this user. Please create a stall first.")
+      setIsSubmitting(false)
+      return
+    }
 
-    setIsSubmitting(false)
-    onClose()
-    alert("Product added successfully!")
+    try {
+      const res = await fetch("http://localhost:3001/api/products", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          stall_id: stallId, // dynamically detect stall_id
+          item_name: formData.name,
+          category: formData.category,
+          price: parseFloat(formData.price),
+          item_stocks: parseInt(formData.stock),
+          item_description: formData.description,
+        }),
+      })
+
+      if (!res.ok) throw new Error("Failed to add product")
+
+      const newProduct = await res.json()
+      console.log("Product created:", newProduct)
+
+      // === Refresh ProductListings ===
+      triggerProductListingsRefresh()
+
+      alert("Product added successfully!")
+      onClose()
+    } catch (err) {
+      console.error(err)
+      alert("Error adding product, check console for details")
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
