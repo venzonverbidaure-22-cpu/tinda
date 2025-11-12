@@ -65,7 +65,7 @@ export default function SignupPage() {
       const data = await res.json()
 
       if (!res.ok) {
-        setError(data.error || "Signup Failed")
+        setError(data.message || "Signup Failed")
         setIsLoading(false)
         return
       }
@@ -78,7 +78,7 @@ export default function SignupPage() {
       if (loginRes.ok){
         await login(email, password, role)
         if (role === "vendor") {
-          router.push("/")
+          router.push("/vendor/dashboard")
         } else {
           router.push("/")
         }
