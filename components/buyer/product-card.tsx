@@ -15,12 +15,12 @@ export function ProductCard({ product }: ProductCardProps) {
   const { addToCart, cart } = useApp()
   const [isAdded, setIsAdded] = useState(false)
 
-  const isInCart = cart.some((item) => item.productId === product.id)
+  const isInCart = cart.some((item) => item.productId === product.product_id)
 
   const handleAddToCart = () => {
     addToCart({
-      productId: product.id,
-      vendorId: product.vendorId,
+      productId: product.product_id,
+      vendorId: product.stall_id,
       quantity: 1,
       price: product.price,
     })
@@ -32,15 +32,12 @@ export function ProductCard({ product }: ProductCardProps) {
     <Card className="overflow-hidden transition-all hover:shadow-lg">
       {/* Product Image */}
       <div className="relative h-40 w-full bg-muted">
-        <img src={product.image || "/placeholder.svg"} alt={product.name} className="h-full w-full object-cover" />
-        <div className="absolute right-2 top-2 rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground">
-          {product.category}
-        </div>
+        <img src={product.product_image || "/placeholder.svg"} alt={product.product_name} className="h-full w-full object-cover" />
       </div>
 
       {/* Content */}
       <div className="p-4">
-        <h3 className="font-bold text-foreground">{product.name}</h3>
+        <h3 className="font-bold text-foreground">{product.product_name}</h3>
         <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{product.description}</p>
 
         {/* Price and Stock */}

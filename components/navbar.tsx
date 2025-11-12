@@ -2,11 +2,11 @@
 
 import { useApp } from "@/lib/context"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { ShoppingCart, Search, User, LogOut, MapPin } from "lucide-react"
+import { ShoppingCart, User, LogOut, MapPin } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { SearchBar } from "@/components/search/SearchBar"
 
 export function Navbar() {
   const { currentUser, userStatus, userRole, selectedLocation, logout, cart } = useApp()
@@ -30,10 +30,7 @@ export function Navbar() {
         {/* Search Bar - Only show when authenticated */}
         {userStatus === "authenticated" && (
           <div className="hidden flex-1 max-w-md md:flex">
-            <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input placeholder="Search vendors or products..." className="pl-10" />
-            </div>
+            <SearchBar />
           </div>
         )}
 

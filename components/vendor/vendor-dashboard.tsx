@@ -8,6 +8,7 @@ import { TrendingUp, Package, ShoppingCart, Plus } from "lucide-react"
 import { useState } from "react"
 import { AddProductModal } from "./add-product-modal"
 import { VendorOrdersTable } from "./vendor-orders-table"
+import { ProductListings } from "./product-listing" // ✅ Added import
 
 const salesData = [
   { day: "Mon", sales: 4000 },
@@ -72,6 +73,9 @@ export function VendorDashboard() {
           </div>
         </Card>
       </div>
+
+      {/* ✅ Product Listings Section */}
+      <ProductListings /> 
 
       {/* Sales Chart */}
       <Card className="p-6">

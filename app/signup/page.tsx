@@ -13,6 +13,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import Link from "next/link"
 import { Navbar } from "@/components/navbar"
 import type { UserRole } from "@/lib/types"
+import { json } from "stream/consumers"
 
 export default function SignupPage() {
   const router = useRouter()
@@ -32,7 +33,7 @@ export default function SignupPage() {
 
     try {
       // Mock validation
-      if (!name || !email || !password || !confirmPassword) {
+      if (!name || !email || !password || !confirmPassword || !role) {
         setError("Please fill in all fields")
         setIsLoading(false)
         return
@@ -50,9 +51,38 @@ export default function SignupPage() {
         return
       }
 
-      // Mock signup - just log them in
-      await login(email, password, role)
-      router.push("/")
+     
+      const res = await fetch("http://localhost:3001/api/auth/register", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+          full_name: name,
+          email, 
+          password,
+          role
+        }),
+      })
+      const data = await res.json()
+
+      if (!res.ok) {
+        setError(data.message || "Signup Failed")
+        setIsLoading(false)
+        return
+      }
+      const loginRes = await fetch("http://localhost:3001/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({email,password, role}),
+      })
+      const loginData = await loginRes.json()
+      if (loginRes.ok){
+        await login(email, password, role)
+        if (role === "vendor") {
+          router.push("/vendor/dashboard")
+        } else {
+          router.push("/")
+        }
+      }
     } catch (err) {
       setError("Signup failed. Please try again.")
     } finally {

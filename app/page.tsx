@@ -3,7 +3,7 @@
 import { useApp } from "@/lib/context"
 import { Navbar } from "@/components/navbar"
 import { BuyerDashboard } from "@/components/buyer/buyer-dashboard"
-import { VendorDashboard } from "@/components/vendor/vendor-dashboard"
+import { EnhancedVendorDashboard } from "@/components/vendor/enhanced-vendor-dashboard"
 import { LandingPage } from "@/components/landing-page"
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
@@ -20,8 +20,8 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-background">
-      <Navbar />
-      {userStatus === "visitor" ? <LandingPage /> : userRole === "buyer" ? <BuyerDashboard /> : <VendorDashboard />}
+      <Navbar/>
+      {userStatus === "visitor" ? <LandingPage /> : userRole === "buyer" ? <BuyerDashboard /> : <EnhancedVendorDashboard/>}
     </main>
   )
 }

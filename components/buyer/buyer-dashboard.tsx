@@ -1,14 +1,30 @@
 "use client"
 
 import { useApp } from "@/lib/context"
-import { mockVendors } from "@/lib/mock-data"
+import { Vendor } from "@/lib/types"
 import { VendorCard } from "./vendor-card"
 import { LoyaltyWidget } from "./loyalty-widget"
 import { LocationSelector } from "@/components/location-selector"
 import Link from "next/link"
+import { useEffect, useState } from "react"
 
 export function BuyerDashboard() {
   const { currentUser, selectedLocation } = useApp()
+  const [vendors, setVendors] = useState<Vendor[]>([])
+
+  useEffect(() => {
+    const fetchVendors = async () => {
+      try {
+        const response = await fetch("/api/stalls")
+        const data = await response.json()
+        setVendors(data)
+      } catch (error) {
+        console.error("Error fetching vendors:", error)
+      }
+    }
+
+    fetchVendors()
+  }, [])
 
   return (
     <div className="space-y-8 px-6 py-8">
@@ -40,8 +56,8 @@ export function BuyerDashboard() {
       <div>
         <h2 className="mb-6 text-2xl font-bold text-foreground">Featured Vendors</h2>
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {mockVendors.map((vendor) => (
-            <VendorCard key={vendor.id} vendor={vendor} />
+          {vendors.map((vendor) => (
+            <VendorCard key={vendor.stall_id} vendor={vendor} />
           ))}
         </div>
       </div>

@@ -35,38 +35,68 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   // Load session from localStorage on mount
   useEffect(() => {
-    const savedSession = localStorage.getItem("tinda_session")
-    const savedLocation = localStorage.getItem("tinda_location")
+  const savedSession = localStorage.getItem("tinda_session");
+  const savedLocation = localStorage.getItem("tinda_location");
 
-    if (savedSession) {
-      try {
-        const session = JSON.parse(savedSession)
-        setCurrentUser(session.user)
-        setUserStatus("authenticated")
-        setUserRole(session.user.role)
-      } catch (error) {
-        console.error("Failed to load session:", error)
+  if (savedSession) {
+    try {
+      const session = JSON.parse(savedSession);
+      const token = session.token;
+
+      if (token) {
+        fetch("http://localhost:3001/api/auth/profile", {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+          .then((res) => (res.ok ? res.json() : Promise.reject()))
+          .then((data) => {
+            setCurrentUser(data.user);
+            setUserStatus("authenticated");
+            setUserRole(data.user.role);
+          })
+          .catch(() => {
+            console.warn("Session expired — logging out");
+            localStorage.removeItem("tinda_session");
+          });
       }
+    } catch (error) {
+      console.error("Failed to load session:", error);
     }
+  }
 
-    if (savedLocation) {
-      setSelectedLocation(savedLocation)
-    }
-  }, [])
+  if (savedLocation) {
+    setSelectedLocation(savedLocation);
+  }
+}, []);
+
 
   const login = async (email: string, password: string, role: UserRole) => {
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 500))
+  try {
+    const res = await fetch("http://localhost:3001/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password, role }),
+    });
 
-    const user = role === "buyer" ? mockUsers.buyer : mockUsers.vendor
+    const data = await res.json();
 
-    setCurrentUser(user)
-    setUserStatus("authenticated")
-    setUserRole(role)
+    if (!res.ok) {
+      throw new Error(data.message || "Login failed");
+    }
 
-    // Save to localStorage
-    localStorage.setItem("tinda_session", JSON.stringify({ user }))
+    const { user, token } = data;
+
+    setCurrentUser(user);
+    setUserStatus("authenticated");
+    setUserRole(user.role);
+
+    // Store session
+    localStorage.setItem("tinda_session", JSON.stringify({ user, token }));
+  } catch (error) {
+    console.error("Login error:", error);
+    throw error;
   }
+};
+
 
   const logout = () => {
     setCurrentUser(null)
