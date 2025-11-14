@@ -103,7 +103,6 @@ export function EnhancedVendorDashboard() {
                   <ShoppingCart className="h-8 w-8 text-accent" />
                 </div>
               </Card>
-
               <Card className="p-6">
                 <div className="flex items-center justify-between">
                   <div>

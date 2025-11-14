@@ -15,6 +15,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
+import { CurrentUser } from "@/lib/utils"
 
 export function CreateStallModal() {
   const [stallData, setStallData] = useState({
@@ -67,76 +68,101 @@ export function CreateStallModal() {
   }
 
   const handleSubmit = async () => {
-    // Validate required fields
-    if (!stallData.stall_name || !stallData.category || 
-        !stallData.stall_description || !stallData.stall_address) {
-      alert("❌ Please fill in all required fields (Name, Category, Description, Address)");
+  const currentUser = CurrentUser();
+  console.log("Current user:", currentUser);
+  
+
+  const userId = currentUser?.id;
+  console.log("Current user ID:", userId);
+   
+  if (!userId) {
+    alert("Please login to create a stall");
+    return;
+  }
+
+  // Validate required fields
+  if (!stallData.stall_name || !stallData.category || 
+      !stallData.stall_description || !stallData.stall_address) {
+    alert("❌ Please fill in all required fields (Name, Category, Description, Address)");
+    return;
+  }
+
+  setIsSubmitting(true);
+  try {
+    // Get the JWT token from storage
+    const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+    console.log("JWT Token:", token); // Debug: check if token exists
+      console.log("=== TOKEN ANALYSIS ===");
+      console.log("Full token:", token);
+    if (!token) {
+      alert("❌ Authentication token not found. Please log in again.");
       return;
     }
 
-    setIsSubmitting(true)
-    try {
-      // Get user_id from your auth system
-      const userId = localStorage.getItem("user_id") || 
-                     sessionStorage.getItem("user_id") || 
-                     "1" // temporary fallback for testing
-      
-      if (!userId) {
-        alert("❌ Please log in to create a stall")
-        return
-      }
+    const formData = new FormData();
+    
+    // Append all stall data
+    Object.entries(stallData).forEach(([key, value]) => formData.append(key, value));
+    
+    // Append user_id
+    formData.append("user_id", userId.toString());
 
-      const formData = new FormData()
-      
-      // Append all stall data
-      Object.entries(stallData).forEach(([key, value]) => formData.append(key, value))
-      
-      // Append user_id
-      formData.append("user_id", userId)
+    // Append images with correct field names
+    if (stallImages.icon) formData.append("icon_image", stallImages.icon);
+    if (stallImages.banner) formData.append("banner_image", stallImages.banner);
 
-      // Append images with correct field names
-      if (stallImages.icon) formData.append("icon_image", stallImages.icon)
-      if (stallImages.banner) formData.append("banner_image", stallImages.banner)
-
-      // Debug: log what's being sent
-      console.log("FormData contents:")
-      for (const pair of formData.entries()) {
-        console.log(pair[0], pair[1])
-      }
-
-      const res = await axios.post("http://localhost:3001/api/stalls", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      })
-
-      alert("✅ Stall created successfully!")
-      console.log(res.data)
-
-      // Reset form
-      setStallData({
-        stall_name: "",
-        stall_description: "",
-        category: "",
-        stall_address: "",
-        stall_city: "",
-        stall_state: "",
-        stall_zipcode: "",
-        stall_country: "Philippines",
-      })
-      setStallImages({ icon: null, banner: null })
-      setPreview({ icon: "", banner: "" })
-    } catch (error) {
-      console.error("Error creating stall:", error)
-      alert("❌ Error creating stall. Please try again.")
-    } finally {
-      setIsSubmitting(false)
+    // Debug: log what's being sent
+    console.log("FormData contents:");
+    for (const pair of formData.entries()) {
+      console.log(pair[0], pair[1]);
     }
+
+    // ✅ CRITICAL: Add Authorization header with Bearer token
+    const res = await axios.post("http://localhost:3001/api/stalls", formData, {
+      headers: { 
+        "Content-Type": "multipart/form-data",
+        "Authorization": `Bearer ${token}` // This is what fixes the 401 error
+      },
+    });
+
+    alert("✅ Stall created successfully!");
+    console.log(res.data);
+
+    // Reset form
+    setStallData({
+      stall_name: "",
+      stall_description: "",
+      // vendor_contact: "", // Add this if missing.
+      category: "",
+      stall_address: "",
+      stall_city: "",
+      stall_state: "",
+      stall_zipcode: "",
+      stall_country: "Philippines",
+    });
+    setStallImages({ icon: null, banner: null });
+    setPreview({ icon: "", banner: "" });
+  } catch (error: any) {
+    console.error("Error creating stall:", error);
+    
+    // Better error handling
+    if (error.response?.status === 401) {
+      alert("❌ Authentication failed. Please log in again.");
+    } else if (error.response?.data?.error) {
+      alert(`❌ ${error.response.data.error}`);
+    } else {
+      alert("❌ Error creating stall. Please try again.");
+    }
+  } finally {
+    setIsSubmitting(false);
   }
+};
 
   return (
     <Dialog>
       <DialogTrigger asChild>
         <Button className="w-full">
-          Open Shop
+          Create Stall
         </Button>
       </DialogTrigger>
 

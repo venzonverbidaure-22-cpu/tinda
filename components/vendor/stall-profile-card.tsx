@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select"
 import { useState, useEffect } from "react"
 import axios from "axios"
+import { CurrentUser } from "@/lib/utils"
 
 const BACKEND_URL = "http://localhost:3001";
 
@@ -30,23 +31,50 @@ export function StallProfileCard() {
   useEffect(() => {
     const fetchStalls = async () => {
       try {
-        const response = await axios.get(`${BACKEND_URL}/api/stalls/vendor/1`);
+        const currentUser = CurrentUser()
+        const token = localStorage.getItem("token") || sessionStorage.getItem("token")
+
+         if (!currentUser?.id || !token) {
+          console.error("User not authenticated");
+          setStalls([]);
+          return;
+        }
+
+         const response = await axios.get(`${BACKEND_URL}/api/stalls/vendor/${currentUser.id}`, {
+          headers: {
+            "Authorization": `Bearer ${token}`
+          }
+        });
+
+        console.log("Stalls response:", response.data);
+
         const sortedStalls = response.data.sort((a: Stall, b: Stall) => a.stall_name.localeCompare(b.stall_name));
         setStalls(sortedStalls);
 
+       
+        let stallToSelect: Stall | null = null;
+
+        // 1. Try to get from localStorage
         const savedStallId = localStorage.getItem("selectedStallId");
         if (savedStallId) {
-          const savedStall = sortedStalls.find((s: Stall) => s.stall_id === Number(savedStallId));
-          if (savedStall) {
-            setSelectedStall(savedStall);
-          } else if (sortedStalls.length > 0) {
-            setSelectedStall(sortedStalls[0]);
-          }
-        } else if (sortedStalls.length > 0) {
-          setSelectedStall(sortedStalls[0]);
+          stallToSelect = sortedStalls.find((s: Stall) => String(s.stall_id) === savedStallId) || null;
         }
-      } catch (error) {
+
+        // 2. If not found in localStorage, use the first stall
+        if (!stallToSelect && sortedStalls.length > 0) {
+          stallToSelect = sortedStalls[0];
+          // Save it to localStorage for next time
+          localStorage.setItem("selectedStallId", stallToSelect.stall_id);
+        }
+
+        setSelectedStall(stallToSelect);
+
+      } catch (error: any) {
         console.error("Error fetching stalls:", error);
+        console.error("Error details:", error.response?.data);
+        setStalls([]);
+      } finally {
+        setIsLoading(false);
       }
     };
 

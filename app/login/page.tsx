@@ -13,6 +13,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import Link from "next/link"
 import { Navbar } from "@/components/navbar"
 import type { UserRole } from "@/lib/types"
+import axios from "axios"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -36,6 +37,18 @@ export default function LoginPage() {
 
     await login(email, password, role)
 
+    const response = await axios.post("http://localhost:3001/api/auth/login",{
+      email,
+      password,
+      role
+    })
+
+    const {token, user: userData} = response.data
+    localStorage.setItem("token", token)
+    localStorage.setItem("user_id", userData.id.toString())
+    localStorage.setItem("user_role", userData.role)
+    localStorage.setItem("user_email", userData.email)
+    localStorage.setItem("user_full_name", userData.full_name)
     // ✅ Redirect by role
     if (role === "vendor") {
       router.push("/")
