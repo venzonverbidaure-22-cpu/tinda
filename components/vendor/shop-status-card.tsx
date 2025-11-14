@@ -5,15 +5,14 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Store, AlertCircle, CheckCircle } from "lucide-react"
 import { useState } from "react"
-import { CreateStallModal } from "./CreateStallModal"
-
 
 interface ShopStatusCardProps {
   shopStatus?: "active" | "inactive" | "pending"
   userId?: number // you'll pass this in from logged-in user
+  openCreateStallModal: () => void
 }
 
-export function ShopStatusCard({ shopStatus = "inactive", userId }: ShopStatusCardProps) {
+export function ShopStatusCard({ shopStatus = "inactive", userId, openCreateStallModal }: ShopStatusCardProps) {
   const [isOpening, setIsOpening] = useState(false)
 
   const statusConfig = {
@@ -62,7 +61,9 @@ export function ShopStatusCard({ shopStatus = "inactive", userId }: ShopStatusCa
 
           {shopStatus === "inactive" && (
       <div className="mt-6">
-        <CreateStallModal/>
+        <Button onClick={openCreateStallModal} className="w-full">
+          Create Stall
+        </Button>
         <p className="mt-3 text-xs text-muted-foreground">
           Your shop will be visible to local buyers once opened. You can start listing products immediately.
         </p>

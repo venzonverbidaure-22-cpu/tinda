@@ -13,6 +13,7 @@ import { TrendingUp, ShoppingCart, Star } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useState, useEffect } from "react"
 import axios from "axios"
+import { CreateStallModal } from "./CreateStallModal"
 
 const salesData = [
   { day: "Mon", sales: 4000 },
@@ -27,6 +28,7 @@ const salesData = [
 export function EnhancedVendorDashboard() {
   const { currentUser } = useApp()
   const [stallData, setStallData] = useState(null);
+  const [isCreateStallModalOpen, setIsCreateStallModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchStallData = async () => {
@@ -69,7 +71,7 @@ export function EnhancedVendorDashboard() {
           <TabsContent value="overview" className="space-y-6">
             <div className="grid gap-6 lg:grid-cols-3">
               {/* Shop Status - SCRUM-21 */}
-              <ShopStatusCard shopStatus="inactive" />
+              <ShopStatusCard shopStatus="inactive" openCreateStallModal={() => setIsCreateStallModalOpen(true)} />
 
               {/* Virtual Stall Profile - SCRUM-9 */}
               <div className="lg:col-span-2">
@@ -147,6 +149,7 @@ export function EnhancedVendorDashboard() {
           </TabsContent>
         </Tabs>
       </div>
+      <CreateStallModal isOpen={isCreateStallModalOpen} onClose={() => setIsCreateStallModalOpen(false)} />
     </main>
   )
 }

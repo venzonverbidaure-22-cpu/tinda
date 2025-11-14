@@ -12,12 +12,16 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-  DialogTrigger,
 } from "@/components/ui/dialog"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
 import { CurrentUser } from "@/lib/utils"
 
-export function CreateStallModal() {
+interface CreateStallModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export function CreateStallModal({ isOpen, onClose }: CreateStallModalProps) {
   const [stallData, setStallData] = useState({
     stall_name: "",
     stall_description: "",
@@ -127,6 +131,8 @@ export function CreateStallModal() {
 
     alert("✅ Stall created successfully!");
     console.log(res.data);
+    onClose();
+    window.location.reload();
 
     // Reset form
     setStallData({
@@ -159,13 +165,7 @@ export function CreateStallModal() {
 };
 
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button className="w-full">
-          Create Stall
-        </Button>
-      </DialogTrigger>
-
+    <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl rounded-2xl p-6 shadow-xl">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold text-center">
