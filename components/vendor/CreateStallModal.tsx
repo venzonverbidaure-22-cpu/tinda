@@ -132,7 +132,7 @@ export function CreateStallModal({ isOpen, onClose }: CreateStallModalProps) {
     alert("✅ Stall created successfully!");
     console.log(res.data);
     onClose();
-    window.location.reload();
+    window.location.href = "/vendor/dashboard";
 
     // Reset form
     setStallData({
