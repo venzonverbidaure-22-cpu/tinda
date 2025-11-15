@@ -18,6 +18,7 @@ export function SearchBar({ className }: SearchBarProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [error, setError] = useState<string | null>(null);
   
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -32,6 +33,7 @@ export function SearchBar({ className }: SearchBarProps) {
       } else {
         setSuggestions([]);
         setIsOpen(false);
+        setError(null);
       }
     }, 300);
 
@@ -57,6 +59,7 @@ export function SearchBar({ className }: SearchBarProps) {
     abortControllerRef.current = new AbortController();
 
     setIsLoading(true);
+    setError(null);
 
     try {
       const response = await fetch(
@@ -64,15 +67,21 @@ export function SearchBar({ className }: SearchBarProps) {
         { signal: abortControllerRef.current.signal }
       );
 
-      if (!response.ok) throw new Error('Search failed');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.details || 'Search failed');
+      }
 
       const data = await response.json();
+      console.log('Search results:', data); // Debug log
       setSuggestions(data.results);
       setIsOpen(data.results.length > 0);
       setSelectedIndex(-1);
     } catch (error: any) {
       if (error.name !== 'AbortError') {
         console.error('Search failed:', error);
+        setError(error.message);
+        setSuggestions([]);
       }
     } finally {
       setIsLoading(false);
@@ -147,6 +156,7 @@ export function SearchBar({ className }: SearchBarProps) {
               setQuery('');
               setSuggestions([]);
               setIsOpen(false);
+              setError(null);
               inputRef.current?.focus();
             }}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
@@ -156,7 +166,13 @@ export function SearchBar({ className }: SearchBarProps) {
         )}
       </div>
 
-      {isOpen && (
+      {error && query.length >= 2 && (
+        <div className="absolute top-full z-50 mt-2 w-full rounded-lg border bg-destructive/10 p-3 text-sm text-destructive">
+          {error}
+        </div>
+      )}
+
+      {isOpen && !error && (
         <div className="absolute top-full z-50 mt-2 w-full rounded-lg border bg-popover shadow-lg">
           <div className="max-h-[400px] overflow-y-auto p-1">
             {suggestions.map((item, index) => (
