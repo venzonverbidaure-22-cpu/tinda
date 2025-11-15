@@ -1,5 +1,7 @@
-import pool from '@/db';
-import { SearchResult } from '@/lib/search';
+import { db } from '@/src/db/drizzle';
+import { stalls, stallItems, images } from '@/src/db/schema'; // Adjust to your schema path
+import { sql, or, like, eq, and, desc } from 'drizzle-orm';
+import { SearchResult } from '@/lib/services/search';
 
 export class SearchService {
   private cache: Map<string, { results: SearchResult[]; timestamp: number }>;
@@ -18,12 +20,10 @@ export class SearchService {
       return cached.results;
     }
 
-    const searchTerm = `%${query.toLowerCase()}%`;
-
     try {
       const [stallResults, itemResults] = await Promise.all([
-        this.searchStalls(searchTerm),
-        this.searchItems(searchTerm, includeOutOfStock),
+        this.searchStalls(query),
+        this.searchItems(query, includeOutOfStock),
       ]);
 
       const results = [...stallResults, ...itemResults]
@@ -38,140 +38,175 @@ export class SearchService {
     }
   }
 
-  private async searchStalls(searchTerm: string): Promise<SearchResult[]> {
-    const query = `
-      SELECT 
-        s.stall_id,
-        s.stall_name,
-        s.stall_description,
-        s.category,
-        i.image_url,
-        CASE 
-          WHEN LOWER(s.stall_name) LIKE $1 THEN 100
-          WHEN LOWER(s.stall_name) LIKE $2 THEN 80
-          WHEN LOWER(s.category) LIKE $1 THEN 60
-          WHEN LOWER(s.stall_description) LIKE $1 THEN 40
-          ELSE 20
-        END as relevance_score
-      FROM stalls s
-      LEFT JOIN LATERAL (
-        SELECT image_url 
-        FROM images 
-        WHERE stall_id = s.stall_id AND image_type = 'profile' 
-        LIMIT 1
-      ) i ON true
-      WHERE 
-        LOWER(s.stall_name) LIKE $1 
-        OR LOWER(s.category) LIKE $1 
-        OR LOWER(s.stall_description) LIKE $1
-      ORDER BY relevance_score DESC
-      LIMIT 20
-    `;
+  private async searchStalls(query: string): Promise<SearchResult[]> {
+    const searchTerm = `%${query.toLowerCase()}%`;
 
-    const { rows } = await pool.query(query, [searchTerm, `${searchTerm.slice(1, -1)}%`]);
+    try {
+      // Get stalls with images using subquery
+      const results = await db
+        .select({
+          stallId: stalls.stallId,
+          stallName: stalls.stallName,
+          stallDescription: stalls.stallDescription,
+          category: stalls.category,
+          imageUrl: images.imageUrl,
+        })
+        .from(stalls)
+        .leftJoin(
+          images,
+          and(
+            eq(images.stallId, stalls.stallId),
+            eq(images.imageType, 'profile')
+          )
+        )
+        .where(
+          or(
+            sql`LOWER(${stalls.stallName}) LIKE ${searchTerm}`,
+            sql`LOWER(${stalls.category}) LIKE ${searchTerm}`,
+            sql`LOWER(${stalls.stallDescription}) LIKE ${searchTerm}`
+          )
+        )
+        .limit(20);
 
-    return rows.map((row) => ({
-      id: row.stall_id,
-      name: row.stall_name,
-      type: 'stall' as const,
-      description: row.stall_description,
-      category: row.category,
-      imageUrl: row.image_url,
-      relevanceScore: row.relevance_score,
-    }));
+      // Calculate relevance score
+      return results.map((row) => {
+        const name = row.stallName.toLowerCase();
+        const cat = row.category?.toLowerCase() || '';
+        const desc = row.stallDescription?.toLowerCase() || '';
+        const q = query.toLowerCase();
+
+        let relevanceScore = 20;
+        if (name === q) relevanceScore = 100;
+        else if (name.startsWith(q)) relevanceScore = 80;
+        else if (name.includes(q)) relevanceScore = 60;
+        else if (cat.includes(q)) relevanceScore = 50;
+        else if (desc.includes(q)) relevanceScore = 40;
+
+        return {
+          id: row.stallId,
+          name: row.stallName,
+          type: 'stall' as const,
+          description: row.stallDescription || undefined,
+          category: row.category,
+          imageUrl: row.imageUrl || undefined,
+          relevanceScore,
+        };
+      });
+    } catch (error) {
+      console.error('Search stalls error:', error);
+      return [];
+    }
   }
 
-  private async searchItems(searchTerm: string, includeOutOfStock: boolean): Promise<SearchResult[]> {
-    const inStockCondition = includeOutOfStock ? '' : 'AND si.in_stock = true';
+  private async searchItems(query: string, includeOutOfStock: boolean): Promise<SearchResult[]> {
+    const searchTerm = `%${query.toLowerCase()}%`;
 
-    const query = `
-      SELECT 
-        si.item_id,
-        si.item_name,
-        si.item_description,
-        si.price,
-        si.in_stock,
-        s.stall_name,
-        s.category,
-        i.image_url,
-        CASE 
-          WHEN LOWER(si.item_name) LIKE $1 THEN 100
-          WHEN LOWER(si.item_name) LIKE $2 THEN 80
-          WHEN LOWER(si.item_description) LIKE $1 THEN 60
-          WHEN LOWER(s.stall_name) LIKE $1 THEN 40
-          ELSE 20
-        END as relevance_score
-      FROM stall_items si
-      INNER JOIN stalls s ON s.stall_id = si.stall_id
-      LEFT JOIN LATERAL (
-        SELECT image_url 
-        FROM images 
-        WHERE item_id = si.item_id AND image_type = 'product' 
-        LIMIT 1
-      ) i ON true
-      WHERE 
-        (LOWER(si.item_name) LIKE $1 
-        OR LOWER(si.item_description) LIKE $1
-        OR LOWER(s.stall_name) LIKE $1)
-        ${inStockCondition}
-      ORDER BY relevance_score DESC
-      LIMIT 20
-    `;
+    try {
+      const whereConditions = [
+        or(
+          sql`LOWER(${stallItems.itemName}) LIKE ${searchTerm}`,
+          sql`LOWER(${stallItems.itemDescription}) LIKE ${searchTerm}`,
+          sql`LOWER(${stalls.stallName}) LIKE ${searchTerm}`
+        ),
+      ];
 
-    const { rows } = await pool.query(query, [searchTerm, `${searchTerm.slice(1, -1)}%`]);
+      // Add stock filter if needed
+      if (!includeOutOfStock) {
+        whereConditions.push(eq(stallItems.inStock, true));
+      }
 
-    return rows.map((row) => ({
-      id: row.item_id,
-      name: row.item_name,
-      type: 'item' as const,
-      description: row.item_description,
-      price: parseFloat(row.price),
-      category: row.category,
-      imageUrl: row.image_url,
-      stallName: row.stall_name,
-      inStock: row.in_stock,
-      relevanceScore: row.relevance_score,
-    }));
+      const results = await db
+        .select({
+          itemId: stallItems.itemId,
+          itemName: stallItems.itemName,
+          itemDescription: stallItems.itemDescription,
+          price: stallItems.price,
+          inStock: stallItems.inStock,
+          stallName: stalls.stallName,
+          category: stalls.category,
+          imageUrl: images.imageUrl,
+        })
+        .from(stallItems)
+        .innerJoin(stalls, eq(stalls.stallId, stallItems.stallId))
+        .leftJoin(
+          images,
+          and(
+            eq(images.itemId, stallItems.itemId),
+            eq(images.imageType, 'product')
+          )
+        )
+        .where(and(...whereConditions))
+        .limit(20);
+
+      // Calculate relevance score
+      return results.map((row) => {
+        const name = row.itemName.toLowerCase();
+        const desc = row.itemDescription?.toLowerCase() || '';
+        const stallName = row.stallName.toLowerCase();
+        const q = query.toLowerCase();
+
+        let relevanceScore = 20;
+        if (name === q) relevanceScore = 100;
+        else if (name.startsWith(q)) relevanceScore = 80;
+        else if (name.includes(q)) relevanceScore = 60;
+        else if (desc.includes(q)) relevanceScore = 50;
+        else if (stallName.includes(q)) relevanceScore = 40;
+
+        return {
+          id: row.itemId,
+          name: row.itemName,
+          type: 'item' as const,
+          description: row.itemDescription || undefined,
+          price: row.price ? parseFloat(row.price.toString()) : undefined,
+          category: row.category,
+          imageUrl: row.imageUrl || undefined,
+          stallName: row.stallName,
+          inStock: row.inStock || false,
+          relevanceScore,
+        };
+      });
+    } catch (error) {
+      console.error('Search items error:', error);
+      return [];
+    }
   }
-}
 
-// ============================================
-// FILE 4: app/api/search/suggest/route.ts
-// ============================================
-import { NextRequest, NextResponse } from 'next/server';
-import { SearchService } from '@/lib/services/searchService';
+  async searchByCategory(category: string): Promise<SearchResult[]> {
+    try {
+      const results = await db
+        .select({
+          stallId: stalls.stallId,
+          stallName: stalls.stallName,
+          stallDescription: stalls.stallDescription,
+          category: stalls.category,
+          imageUrl: images.imageUrl,
+        })
+        .from(stalls)
+        .leftJoin(
+          images,
+          and(
+            eq(images.stallId, stalls.stallId),
+            eq(images.imageType, 'profile')
+          )
+        )
+        .where(sql`LOWER(${stalls.category}) = LOWER(${category})`)
+        .limit(10);
 
-const searchService = new SearchService();
-
-export async function GET(request: NextRequest) {
-  try {
-    const searchParams = request.nextUrl.searchParams;
-    const query = searchParams.get('q');
-    const includeOutOfStock = searchParams.get('includeOutOfStock') === 'true';
-
-    if (!query || typeof query !== 'string') {
-      return NextResponse.json(
-        { error: 'Query parameter "q" is required' },
-        { status: 400 }
-      );
+      return results.map((row) => ({
+        id: row.stallId,
+        name: row.stallName,
+        type: 'stall' as const,
+        description: row.stallDescription || undefined,
+        category: row.category,
+        imageUrl: row.imageUrl || undefined,
+      }));
+    } catch (error) {
+      console.error('Search by category error:', error);
+      return [];
     }
+  }
 
-    if (query.length < 2) {
-      return NextResponse.json({ results: [], query, count: 0 });
-    }
-
-    const results = await searchService.searchAll(query, includeOutOfStock);
-
-    return NextResponse.json({
-      results,
-      query,
-      count: results.length,
-    });
-  } catch (error) {
-    console.error('Search API error:', error);
-    return NextResponse.json(
-      { error: 'Search failed' },
-      { status: 500 }
-    );
+  clearCache() {
+    this.cache.clear();
   }
 }
