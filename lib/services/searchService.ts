@@ -1,6 +1,6 @@
-import { db } from '@/src/db/drizzle';
-import { stalls, stallItems, images } from '@/src/db/schema'; // Adjust to your schema path
-import { sql, or, like, eq, and, desc } from 'drizzle-orm';
+import { db } from '@/db';
+import { stalls, stall_items, images } from '@/db/schema';
+import { sql, or, eq, and } from 'drizzle-orm';
 import { SearchResult } from '@/lib/search';
 
 export class SearchService {
@@ -45,34 +45,34 @@ export class SearchService {
       // Get stalls with images using subquery
       const results = await db
         .select({
-          stallId: stalls.stallId,
-          stallName: stalls.stallName,
-          stallDescription: stalls.stallDescription,
+          stall_id: stalls.stall_id,
+          stall_name: stalls.stall_name,
+          stall_description: stalls.stall_description,
           category: stalls.category,
-          imageUrl: images.imageUrl,
+          image_url: images.image_url,
         })
         .from(stalls)
         .leftJoin(
           images,
           and(
-            eq(images.stallId, stalls.stallId),
-            eq(images.imageType, 'profile')
+            eq(images.stall_id, stalls.stall_id),
+            eq(images.image_type, 'profile')
           )
         )
         .where(
           or(
-            sql`LOWER(${stalls.stallName}) LIKE ${searchTerm}`,
+            sql`LOWER(${stalls.stall_name}) LIKE ${searchTerm}`,
             sql`LOWER(${stalls.category}) LIKE ${searchTerm}`,
-            sql`LOWER(${stalls.stallDescription}) LIKE ${searchTerm}`
+            sql`LOWER(${stalls.stall_description}) LIKE ${searchTerm}`
           )
         )
         .limit(20);
 
       // Calculate relevance score
       return results.map((row) => {
-        const name = row.stallName.toLowerCase();
+        const name = row.stall_name.toLowerCase();
         const cat = row.category?.toLowerCase() || '';
-        const desc = row.stallDescription?.toLowerCase() || '';
+        const desc = row.stall_description?.toLowerCase() || '';
         const q = query.toLowerCase();
 
         let relevanceScore = 20;
@@ -83,12 +83,12 @@ export class SearchService {
         else if (desc.includes(q)) relevanceScore = 40;
 
         return {
-          id: row.stallId,
-          name: row.stallName,
+          id: row.stall_id,
+          name: row.stall_name,
           type: 'stall' as const,
-          description: row.stallDescription || undefined,
+          description: row.stall_description || undefined,
           category: row.category,
-          imageUrl: row.imageUrl || undefined,
+          imageUrl: row.image_url || undefined,
           relevanceScore,
         };
       });
@@ -104,35 +104,35 @@ export class SearchService {
     try {
       const whereConditions = [
         or(
-          sql`LOWER(${stallItems.itemName}) LIKE ${searchTerm}`,
-          sql`LOWER(${stallItems.itemDescription}) LIKE ${searchTerm}`,
-          sql`LOWER(${stalls.stallName}) LIKE ${searchTerm}`
+          sql`LOWER(${stall_items.item_name}) LIKE ${searchTerm}`,
+          sql`LOWER(${stall_items.item_description}) LIKE ${searchTerm}`,
+          sql`LOWER(${stalls.stall_name}) LIKE ${searchTerm}`
         ),
       ];
 
       // Add stock filter if needed
       if (!includeOutOfStock) {
-        whereConditions.push(eq(stallItems.inStock, true));
+        whereConditions.push(eq(stall_items.in_stock, true));
       }
 
       const results = await db
         .select({
-          itemId: stallItems.itemId,
-          itemName: stallItems.itemName,
-          itemDescription: stallItems.itemDescription,
-          price: stallItems.price,
-          inStock: stallItems.inStock,
-          stallName: stalls.stallName,
+          item_id: stall_items.item_id,
+          item_name: stall_items.item_name,
+          item_description: stall_items.item_description,
+          price: stall_items.price,
+          in_stock: stall_items.in_stock,
+          stall_name: stalls.stall_name,
           category: stalls.category,
-          imageUrl: images.imageUrl,
+          image_url: images.image_url,
         })
-        .from(stallItems)
-        .innerJoin(stalls, eq(stalls.stallId, stallItems.stallId))
+        .from(stall_items)
+        .innerJoin(stalls, eq(stalls.stall_id, stall_items.stall_id))
         .leftJoin(
           images,
           and(
-            eq(images.itemId, stallItems.itemId),
-            eq(images.imageType, 'product')
+            eq(images.item_id, stall_items.item_id),
+            eq(images.image_type, 'product')
           )
         )
         .where(and(...whereConditions))
@@ -140,9 +140,9 @@ export class SearchService {
 
       // Calculate relevance score
       return results.map((row) => {
-        const name = row.itemName.toLowerCase();
-        const desc = row.itemDescription?.toLowerCase() || '';
-        const stallName = row.stallName.toLowerCase();
+        const name = row.item_name.toLowerCase();
+        const desc = row.item_description?.toLowerCase() || '';
+        const stallName = row.stall_name.toLowerCase();
         const q = query.toLowerCase();
 
         let relevanceScore = 20;
@@ -153,15 +153,15 @@ export class SearchService {
         else if (stallName.includes(q)) relevanceScore = 40;
 
         return {
-          id: row.itemId,
-          name: row.itemName,
+          id: row.item_id,
+          name: row.item_name,
           type: 'item' as const,
-          description: row.itemDescription || undefined,
+          description: row.item_description || undefined,
           price: row.price ? parseFloat(row.price.toString()) : undefined,
           category: row.category,
-          imageUrl: row.imageUrl || undefined,
-          stallName: row.stallName,
-          inStock: row.inStock || false,
+          imageUrl: row.image_url || undefined,
+          stallName: row.stall_name,
+          inStock: row.in_stock || false,
           relevanceScore,
         };
       });
@@ -175,30 +175,30 @@ export class SearchService {
     try {
       const results = await db
         .select({
-          stallId: stalls.stallId,
-          stallName: stalls.stallName,
-          stallDescription: stalls.stallDescription,
+          stall_id: stalls.stall_id,
+          stall_name: stalls.stall_name,
+          stall_description: stalls.stall_description,
           category: stalls.category,
-          imageUrl: images.imageUrl,
+          image_url: images.image_url,
         })
         .from(stalls)
         .leftJoin(
           images,
           and(
-            eq(images.stallId, stalls.stallId),
-            eq(images.imageType, 'profile')
+            eq(images.stall_id, stalls.stall_id),
+            eq(images.image_type, 'profile')
           )
         )
         .where(sql`LOWER(${stalls.category}) = LOWER(${category})`)
         .limit(10);
 
       return results.map((row) => ({
-        id: row.stallId,
-        name: row.stallName,
+        id: row.stall_id,
+        name: row.stall_name,
         type: 'stall' as const,
-        description: row.stallDescription || undefined,
+        description: row.stall_description || undefined,
         category: row.category,
-        imageUrl: row.imageUrl || undefined,
+        imageUrl: row.image_url || undefined,
       }));
     } catch (error) {
       console.error('Search by category error:', error);
