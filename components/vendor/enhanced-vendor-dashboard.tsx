@@ -10,6 +10,7 @@ import { SetupChecklist } from "./setup-checklist"
 import { VendorOrdersTable } from "./vendor-orders-table"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
 import { TrendingUp, ShoppingCart, Star } from "lucide-react"
+import Link from "next/link"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useState, useEffect } from "react"
 import axios from "axios"
@@ -155,7 +156,12 @@ useEffect (()  => {
 
             {/* Recent Orders */}
             <Card className="p-6">
-              <h2 className="mb-4 text-lg font-bold text-foreground">Recent Orders</h2>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-bold text-foreground">Recent Orders</h2>
+                <Button asChild>
+                  <Link href="/vendor/orders">All Orders</Link>
+                </Button>
+              </div>
               <VendorOrdersTable />
             </Card>
           </TabsContent>

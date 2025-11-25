@@ -1,0 +1,13 @@
+import axios from 'axios';
+
+const API_URL = 'http://localhost:3001/api/orders';
+
+export const getVendorOrders = async (params: any) => {
+  try {
+    const response = await axios.get(`${API_URL}/vendor`, { params });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching vendor orders:', error);
+    throw error;
+  }
+};
