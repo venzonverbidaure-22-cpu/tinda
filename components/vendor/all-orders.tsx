@@ -82,9 +82,9 @@ export function AllOrders() {
       </div>
 
       <div className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="flex flex-wrap gap-4 items-center">
           <Select value={sort} onValueChange={setSort}>
-            <SelectTrigger>
+            <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
             <SelectContent>
@@ -95,7 +95,7 @@ export function AllOrders() {
           </Select>
 
           <Select value={limit} onValueChange={setLimit}>
-            <SelectTrigger>
+            <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Orders to display" />
             </SelectTrigger>
             <SelectContent>
@@ -108,7 +108,7 @@ export function AllOrders() {
           </Select>
 
           <Select value={stall} onValueChange={setStall}>
-            <SelectTrigger>
+            <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Select Stall" />
             </SelectTrigger>
             <SelectContent>
@@ -120,15 +120,15 @@ export function AllOrders() {
             </SelectContent>
           </Select>
 
-          <Select onValueChange={handleAddFilter}>
-            <SelectTrigger>
+          <Select onValueChange={handleAddFilter} value="">
+            <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Filter by category" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="food">Food</SelectItem>
-              <SelectItem value="clothing">Clothing</SelectItem>
-              <SelectItem value="electronics">Electronics</SelectItem>
-              <SelectItem value="others">Others</SelectItem>
+              <SelectItem value="food" className="pr-2">Food</SelectItem>
+              <SelectItem value="clothing" className="pr-2">Clothing</SelectItem>
+              <SelectItem value="electronics" className="pr-2">Electronics</SelectItem>
+              <SelectItem value="others" className="pr-2">Others</SelectItem>
             </SelectContent>
           </Select>
         </div>
