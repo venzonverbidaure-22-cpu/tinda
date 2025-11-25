@@ -64,7 +64,7 @@ export function StallProfileCard() {
         if (!stallToSelect && sortedStalls.length > 0) {
           stallToSelect = sortedStalls[0];
           // Save it to localStorage for next time
-          localStorage.setItem("selectedStallId", stallToSelect.stall_id);
+          localStorage.setItem("selectedStallId", stallToSelect!.stall_id);
         }
 
         setSelectedStall(stallToSelect);
@@ -177,3 +177,7 @@ export function StallProfileCard() {
     </Card>
   )
 }
+function setIsLoading(arg0: boolean) {
+  throw new Error("Function not implemented.")
+}
+

@@ -9,7 +9,7 @@ import Link from "next/link"
 interface VendorCardProps {
   vendor: Vendor
 }
-
+ 
 export function VendorCard({ vendor }: VendorCardProps) {
   console.log("Vendor data:", vendor)
   console.log("Banner photo:", vendor.banner_photo)
@@ -34,6 +34,8 @@ export function VendorCard({ vendor }: VendorCardProps) {
 
   const bannerUrl = getImageUrl(vendor.banner_photo);
   const iconUrl = getImageUrl(vendor.stall_icon);
+  console.log("Vendor data:", vendor)
+  console.log("Vendor stall_id:", vendor.stall_id, "Type:", typeof vendor.stall_id)
 
   return (
     <Link href={`/vendor/${vendor.stall_id}`}>

@@ -14,6 +14,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useState, useEffect } from "react"
 import axios from "axios"
 import { CreateStallModal } from "./CreateStallModal"
+import { ProductListings } from "./product-listing" 
+import { AddProductModal } from "./add-product-modal"
+import { CurrentUser } from "@/lib/utils"
+
+interface UserData {
+  email: string,
+  full_name: string,
+  user_id: number,
+  role: string,
+}
 
 const salesData = [
   { day: "Mon", sales: 4000 },
@@ -24,24 +34,47 @@ const salesData = [
   { day: "Sat", sales: 2390 },
   { day: "Sun", sales: 3490 },
 ]
-
+// const currentUser = CurrentUser()
+// console.log(currentUser!.id)
 export function EnhancedVendorDashboard() {
-  const { currentUser } = useApp()
-  const [stallData, setStallData] = useState(null);
+  // const { currentUser } = useApp()
+  // const [stallData, setStallData] = useState<UserData | null>(null);
+  const [userData, setUserData] = useState<UserData | null>(null);
+
   const [isCreateStallModalOpen, setIsCreateStallModalOpen] = useState(false);
-
-  useEffect(() => {
-    const fetchStallData = async () => {
-      try {
-        const response = await axios.get("http://localhost:3001/api/stalls/1");
-        setStallData(response.data);
-      } catch (error) {
-        console.error("Error fetching stall data:", error);
-      }
+  // const [userData, setUserData] = useState(null)
+//   useEffect(() => {
+//     const fetchStallData = async () => {
+//       try {
+//         const response = await axios.get(`http://localhost:3001/api/stalls/vendor/${currentUser?.id}`);
+//         setStallData(response.data);
+//       } catch (error) {
+//         console.error("Error fetching stall data:", error);
+//       }
+//     };
+//     fetchStallData()
+// }, []);
+// console.log('stall',setStallData)
+// console.log(stallData)
+// console.log("stalldata",stallData)
+useEffect (()  => {
+  const fetchUserData = async () => {
+    try {
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token')
+      const response = await axios.get(`http://localhost:3001/api/users/me`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
+      setUserData(response.data)
+      console.log(response.data, "what")
+    } catch (error) {
+      console.error("Error fethcing user data:", error)
     };
-
-    fetchStallData();
-  }, []);
+  }
+  fetchUserData()
+}, []);
+// console.log('userdata',userData?.full_name)
 
   return (
     <main className="min-h-screen bg-background">
@@ -49,7 +82,7 @@ export function EnhancedVendorDashboard() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Welcome back, {currentUser?.name}!</h1>
+            <h1 className="text-3xl font-bold text-foreground">Welcome back, {userData?.full_name}</h1>
             <p className="text-muted-foreground">Manage your shop and grow your sales</p>
           </div>
           <div className="flex gap-2">
@@ -75,7 +108,7 @@ export function EnhancedVendorDashboard() {
 
               {/* Virtual Stall Profile - SCRUM-9 */}
               <div className="lg:col-span-2">
-                <StallProfileCard stallData={stallData} />
+                <StallProfileCard/>
               </div>
             </div>
 

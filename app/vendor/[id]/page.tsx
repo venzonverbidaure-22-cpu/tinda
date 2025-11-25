@@ -10,7 +10,7 @@ import Link from "next/link"
 import { ProductCard } from "@/components/buyer/product-card"
 
 interface VendorPageProps {
-  params: Promise<{ id: string }>
+  params: Promise<{ id: number }>
 }
 
 export default function VendorPage({ params }: VendorPageProps) {
@@ -18,16 +18,35 @@ export default function VendorPage({ params }: VendorPageProps) {
   const [vendor, setVendor] = useState<Vendor | null>(null)
   const [products, setProducts] = useState<Product[]>([])
 
+   const getImageUrl = (imagePath: string | null | undefined) => {
+    if (!imagePath) return "/placeholder.svg";
+    
+    // Convert backslashes to forward slashes (Windows to URL format)
+    const cleanPath = imagePath.replace(/\\/g, '/');
+    
+    // Remove 'uploads/' prefix if it exists
+    const filename = cleanPath.replace(/^uploads\//, '');
+    
+    // Create proper URL for static file serving
+    const finalUrl = `http://localhost:3001/uploads/${filename}`;
+    
+    console.log("Generated image URL:", finalUrl);
+    return finalUrl;
+  };
+  
   useEffect(() => {
     const fetchVendorAndProducts = async () => {
       try {
         // Fetch vendor data
-        const vendorResponse = await fetch(`/api/stalls?stall_id=${id}`)
+        const vendorResponse = await fetch(`http://localhost:3001/api/stalls/${id}`)
         const vendorData = await vendorResponse.json()
-        setVendor(vendorData[0])
+        setVendor(vendorData)
+          console.log(vendorData)
+          console.log(vendorData.banner_photo)
+          console.log(vendorData.stall_icon)
 
         // Fetch products for the vendor
-        const productsResponse = await fetch(`/api/products?stall_id=${id}`)
+        const productsResponse = await fetch(`http://localhost:3001/api/products?stall_id=${id}`)
         const productsData = await productsResponse.json()
         setProducts(productsData)
       } catch (error) {
@@ -39,7 +58,7 @@ export default function VendorPage({ params }: VendorPageProps) {
       fetchVendorAndProducts()
     }
   }, [id])
-
+  
   if (!vendor) {
     return (
       <main className="min-h-screen bg-background">
@@ -52,6 +71,11 @@ export default function VendorPage({ params }: VendorPageProps) {
       </main>
     )
   }
+
+  const bannerUrl = getImageUrl(vendor.banner_url); // Note: it's banner_url not banner_photo
+  const iconUrl = getImageUrl(vendor.icon_url); // Note: it's icon_url not stall_icon
+
+  console.log("Final image URLs:", { bannerUrl, iconUrl })
 
   return (
     <main className="min-h-screen bg-background">
@@ -66,7 +90,7 @@ export default function VendorPage({ params }: VendorPageProps) {
 
         {/* Vendor Banner */}
         <div className="relative h-48 w-full overflow-hidden rounded-lg bg-muted">
-          <img src={vendor.banner_photo || "/placeholder.svg"} alt={vendor.stall_name} className="h-full w-full object-cover" />
+          <img src={bannerUrl || "/placeholder.svg"} alt={vendor.stall_name} className="h-full w-full object-cover" />
         </div>
 
         {/* Vendor Info */}
@@ -75,7 +99,7 @@ export default function VendorPage({ params }: VendorPageProps) {
           <div className="md:col-span-2">
             <div className="flex items-start gap-4">
               <img
-                src={vendor.stall_icon || "/placeholder.svg"}
+                src={iconUrl || "/placeholder.svg"}
                 alt={vendor.stall_name}
                 className="h-20 w-20 rounded-full border-4 border-primary"
               />
