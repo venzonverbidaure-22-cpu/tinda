@@ -89,7 +89,7 @@ export function StallProfileCard() {
     }
   };
 
-  const completionPercentage = selectedStall ? 100 : 60
+
 
   return (
     <Card className="p-6">
@@ -119,8 +119,7 @@ export function StallProfileCard() {
         </div>
       </div>
 
-      <div className="mt-6 space-y-4">
-        {/* Current Profile Preview */}
+      <div className="space-y-4">
         <div className="rounded-lg border border-border bg-muted/30 p-4">
           <div className="flex items-start gap-4">
             <div className="rounded-lg bg-primary/10 w-20 h-20 flex items-center justify-center">
@@ -141,19 +140,7 @@ export function StallProfileCard() {
           </div>
         </div>
 
-        {/* Profile Completion */}
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-foreground">Profile Completion</span>
-            <span className="text-sm font-semibold text-primary">{completionPercentage}%</span>
-          </div>
-          <div className="h-2 w-full rounded-full bg-muted">
-            <div
-              className="h-full rounded-full bg-primary transition-all"
-              style={{ width: `${completionPercentage}%` }}
-            />
-          </div>
-        </div>
+
 
         {/* Missing Items */}
         {selectedStall && (!selectedStall.stall_name || !selectedStall.stall_description) && (
@@ -177,7 +164,5 @@ export function StallProfileCard() {
     </Card>
   )
 }
-function setIsLoading(arg0: boolean) {
-  throw new Error("Function not implemented.")
-}
+
 
