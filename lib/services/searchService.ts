@@ -1,6 +1,6 @@
 import { db } from '@/db';
 import { stalls, stall_items, images } from '@/db/schema';
-import { sql, or, eq, and } from 'drizzle-orm';
+import { sql, or, like, eq, and, desc, ilike } from 'drizzle-orm';
 import { SearchResult } from '@/lib/search';
 
 export class SearchService {

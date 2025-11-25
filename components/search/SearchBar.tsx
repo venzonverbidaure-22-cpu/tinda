@@ -1,25 +1,27 @@
-"use client"
+"use client";
 
-import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
-import { Search, X } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { cn } from '@/lib/utils';
-import { SearchResult } from '@/lib/search';
-import Image from 'next/image';
+import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
+import { Search, X } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
+import { SearchResult } from "@/lib/search";
+import Image from "next/image";
 
 interface SearchBarProps {
   className?: string;
 }
 
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+
 export function SearchBar({ className }: SearchBarProps) {
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [error, setError] = useState<string | null>(null);
-  
+
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -48,10 +50,11 @@ export function SearchBar({ className }: SearchBarProps) {
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Fetch from Express backend
   const fetchSuggestions = async (searchQuery: string) => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
@@ -63,25 +66,25 @@ export function SearchBar({ className }: SearchBarProps) {
 
     try {
       const response = await fetch(
-        `/api/search/suggest?q=${encodeURIComponent(searchQuery)}`,
+        `${BACKEND_URL}/search/suggest?q=${encodeURIComponent(searchQuery)}`,
         { signal: abortControllerRef.current.signal }
       );
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.details || 'Search failed');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "Search failed");
       }
 
       const data = await response.json();
-      console.log('Search results:', data); // Debug log
       setSuggestions(data.results);
       setIsOpen(data.results.length > 0);
       setSelectedIndex(-1);
-    } catch (error: any) {
-      if (error.name !== 'AbortError') {
-        console.error('Search failed:', error);
-        setError(error.message);
+    } catch (err: any) {
+      if (err.name !== "AbortError") {
+        console.error("Search failed:", err);
+        setError(err.message);
         setSuggestions([]);
+        setIsOpen(false);
       }
     } finally {
       setIsLoading(false);
@@ -92,23 +95,23 @@ export function SearchBar({ className }: SearchBarProps) {
     if (!isOpen) return;
 
     switch (e.key) {
-      case 'ArrowDown':
+      case "ArrowDown":
         e.preventDefault();
         setSelectedIndex((prev) =>
           prev < suggestions.length - 1 ? prev + 1 : prev
         );
         break;
-      case 'ArrowUp':
+      case "ArrowUp":
         e.preventDefault();
         setSelectedIndex((prev) => (prev > 0 ? prev - 1 : -1));
         break;
-      case 'Enter':
+      case "Enter":
         e.preventDefault();
         if (selectedIndex >= 0) {
           handleSelect(suggestions[selectedIndex]);
         }
         break;
-      case 'Escape':
+      case "Escape":
         setIsOpen(false);
         setSelectedIndex(-1);
         break;
@@ -120,14 +123,13 @@ export function SearchBar({ className }: SearchBarProps) {
     setIsOpen(false);
     setSelectedIndex(-1);
 
-    const url = result.type === 'stall' 
-      ? `/stalls/${result.id}` 
-      : `/items/${result.id}`;
+    const url =
+      result.type === "stall" ? `/stalls/${result.id}` : `/items/${result.id}`;
     router.push(url);
   };
 
   const formatPrice = (price?: number) => {
-    return price ? `₱${price.toFixed(2)}` : '';
+    return price ? `₱${price.toFixed(2)}` : "";
   };
 
   return (
@@ -153,7 +155,7 @@ export function SearchBar({ className }: SearchBarProps) {
           <button
             type="button"
             onClick={() => {
-              setQuery('');
+              setQuery("");
               setSuggestions([]);
               setIsOpen(false);
               setError(null);
@@ -199,23 +201,21 @@ export function SearchBar({ className }: SearchBarProps) {
                   </div>
                 ) : (
                   <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-md bg-muted text-2xl">
-                    {item.type === 'stall' ? '🏪' : '🛍️'}
+                    {item.type === "stall" ? "🏪" : "🛍️"}
                   </div>
                 )}
 
                 <div className="flex-1 overflow-hidden">
                   <div className="flex items-center gap-2">
-                    <p className="truncate font-medium text-sm">
-                      {item.name}
-                    </p>
-                    {item.type === 'item' && item.inStock === false && (
+                    <p className="truncate font-medium text-sm">{item.name}</p>
+                    {item.type === "item" && item.inStock === false && (
                       <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-xs font-medium text-destructive">
                         Out of Stock
                       </span>
                     )}
                   </div>
-                  
-                  {item.type === 'item' ? (
+
+                  {item.type === "item" ? (
                     <>
                       {item.price && (
                         <p className="text-sm font-semibold text-primary">
@@ -230,15 +230,13 @@ export function SearchBar({ className }: SearchBarProps) {
                     </>
                   ) : (
                     item.category && (
-                      <p className="text-xs text-muted-foreground">
-                        {item.category}
-                      </p>
+                      <p className="text-xs text-muted-foreground">{item.category}</p>
                     )
                   )}
                 </div>
 
                 <div className="text-xl flex-shrink-0">
-                  {item.type === 'stall' ? '🏪' : '🛍️'}
+                  {item.type === "stall" ? "🏪" : "🛍️"}
                 </div>
               </button>
             ))}
