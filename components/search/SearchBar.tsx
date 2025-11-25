@@ -12,7 +12,6 @@ interface SearchBarProps {
   className?: string;
 }
 
-// Change this to match your backend URL
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
 
 export function SearchBar({ className }: SearchBarProps) {
@@ -21,7 +20,6 @@ export function SearchBar({ className }: SearchBarProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
-
   const [error, setError] = useState<string | null>(null);
 
   const searchRef = useRef<HTMLDivElement>(null);
@@ -29,7 +27,6 @@ export function SearchBar({ className }: SearchBarProps) {
   const abortControllerRef = useRef<AbortController | null>(null);
   const router = useRouter();
 
-  // Debounced search
   useEffect(() => {
     const timer = setTimeout(() => {
       if (query.length >= 2) {
@@ -44,7 +41,6 @@ export function SearchBar({ className }: SearchBarProps) {
     return () => clearTimeout(timer);
   }, [query]);
 
-  // Click outside closes dropdown
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
@@ -124,7 +120,8 @@ export function SearchBar({ className }: SearchBarProps) {
     router.push(url);
   };
 
-  const formatPrice = (price?: number) => (price ? `₱${price.toFixed(2)}` : "");
+  const formatPrice = (price?: number | null) =>
+  typeof price === "number" ? `₱${price.toFixed(2)}` : "";
 
   return (
     <div ref={searchRef} className={cn("relative w-full", className)}>
@@ -204,7 +201,7 @@ export function SearchBar({ className }: SearchBarProps) {
                     <p className="truncate font-medium text-sm">{item.name}</p>
                   </div>
 
-                  {item.type === "item" ? (
+                  {item.type === "item" && (
                     <>
                       {item.price && (
                         <p className="text-sm font-semibold text-primary">
@@ -217,10 +214,10 @@ export function SearchBar({ className }: SearchBarProps) {
                         </p>
                       )}
                     </>
-                  ) : (
-                    item.category && (
-                      <p className="text-xs text-muted-foreground">{item.category}</p>
-                    )
+                  )}
+
+                  {item.type === "stall" && item.category && (
+                    <p className="text-xs text-muted-foreground">{item.category}</p>
                   )}
                 </div>
 
