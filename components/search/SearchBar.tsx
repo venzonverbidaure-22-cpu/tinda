@@ -12,6 +12,7 @@ interface SearchBarProps {
   className?: string;
 }
 
+// Change this to match your backend URL
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
 
 export function SearchBar({ className }: SearchBarProps) {
@@ -20,6 +21,7 @@ export function SearchBar({ className }: SearchBarProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
+
   const [error, setError] = useState<string | null>(null);
 
   const searchRef = useRef<HTMLDivElement>(null);
@@ -42,23 +44,19 @@ export function SearchBar({ className }: SearchBarProps) {
     return () => clearTimeout(timer);
   }, [query]);
 
-  // Click outside handler
+  // Click outside closes dropdown
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
         setIsOpen(false);
       }
     };
-
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Fetch from Express backend
   const fetchSuggestions = async (searchQuery: string) => {
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
+    if (abortControllerRef.current) abortControllerRef.current.abort();
     abortControllerRef.current = new AbortController();
 
     setIsLoading(true);
@@ -76,6 +74,7 @@ export function SearchBar({ className }: SearchBarProps) {
       }
 
       const data = await response.json();
+
       setSuggestions(data.results);
       setIsOpen(data.results.length > 0);
       setSelectedIndex(-1);
@@ -107,9 +106,7 @@ export function SearchBar({ className }: SearchBarProps) {
         break;
       case "Enter":
         e.preventDefault();
-        if (selectedIndex >= 0) {
-          handleSelect(suggestions[selectedIndex]);
-        }
+        if (selectedIndex >= 0) handleSelect(suggestions[selectedIndex]);
         break;
       case "Escape":
         setIsOpen(false);
@@ -123,14 +120,11 @@ export function SearchBar({ className }: SearchBarProps) {
     setIsOpen(false);
     setSelectedIndex(-1);
 
-    const url =
-      result.type === "stall" ? `/stalls/${result.id}` : `/items/${result.id}`;
+    const url = result.type === "stall" ? `/stalls/${result.id}` : `/items/${result.id}`;
     router.push(url);
   };
 
-  const formatPrice = (price?: number) => {
-    return price ? `₱${price.toFixed(2)}` : "";
-  };
+  const formatPrice = (price?: number) => (price ? `₱${price.toFixed(2)}` : "");
 
   return (
     <div ref={searchRef} className={cn("relative w-full", className)}>
@@ -208,11 +202,6 @@ export function SearchBar({ className }: SearchBarProps) {
                 <div className="flex-1 overflow-hidden">
                   <div className="flex items-center gap-2">
                     <p className="truncate font-medium text-sm">{item.name}</p>
-                    {item.type === "item" && item.inStock === false && (
-                      <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-xs font-medium text-destructive">
-                        Out of Stock
-                      </span>
-                    )}
                   </div>
 
                   {item.type === "item" ? (
