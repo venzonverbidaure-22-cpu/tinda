@@ -46,7 +46,7 @@ export default function VendorStorePage() {
   const fetchStoreData = async () => {
       try {
         const response = await axios.get(`${BACKEND_URL}/api/stalls/${id}`);
-        const { stall_name, stall_address, stall_description, vendor_contact, category, icon_url, banner_url } = response.data;
+        const { stall_name, stall_address, stall_description, vendor_contact, category, stall_icon, banner_photo } = response.data;
         setStoreData({
           ...storeData,
           name: stall_name,
@@ -54,8 +54,8 @@ export default function VendorStorePage() {
           description: stall_description,
           contactInfo: vendor_contact,
           category: category,
-          icon_url: icon_url,
-          banner_url: banner_url,
+          icon_url: stall_icon,
+          banner_url: banner_photo,
         });
       } catch (error) {
         console.error("Error fetching store data:", error);
