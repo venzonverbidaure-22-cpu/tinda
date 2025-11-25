@@ -86,7 +86,7 @@ export default function SignupPage() {
         await login(email, password, role);
 
         if (role === "vendor") {
-          router.push("/vendor/enhanced-vendor-dashboard");
+          router.push("/vendor/dashboard");
         } else {
           router.push("/");
         }
