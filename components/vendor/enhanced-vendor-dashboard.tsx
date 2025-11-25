@@ -18,6 +18,7 @@ import { CreateStallModal } from "./CreateStallModal"
 import { ProductListings } from "./product-listing" 
 import { AddProductModal } from "./add-product-modal"
 import { CurrentUser } from "@/lib/utils"
+import { getVendorOrders } from "@/lib/services/orderService"
 
 interface UserData {
   email: string,
@@ -35,47 +36,38 @@ const salesData = [
   { day: "Sat", sales: 2390 },
   { day: "Sun", sales: 3490 },
 ]
-// const currentUser = CurrentUser()
-// console.log(currentUser!.id)
-export function EnhancedVendorDashboard() {
-  // const { currentUser } = useApp()
-  // const [stallData, setStallData] = useState<UserData | null>(null);
-  const [userData, setUserData] = useState<UserData | null>(null);
 
+export function EnhancedVendorDashboard() {
+  const [userData, setUserData] = useState<UserData | null>(null);
+  const [recentOrders, setRecentOrders] = useState([]);
   const [isCreateStallModalOpen, setIsCreateStallModalOpen] = useState(false);
-  // const [userData, setUserData] = useState(null)
-//   useEffect(() => {
-//     const fetchStallData = async () => {
-//       try {
-//         const response = await axios.get(`http://localhost:3001/api/stalls/vendor/${currentUser?.id}`);
-//         setStallData(response.data);
-//       } catch (error) {
-//         console.error("Error fetching stall data:", error);
-//       }
-//     };
-//     fetchStallData()
-// }, []);
-// console.log('stall',setStallData)
-// console.log(stallData)
-// console.log("stalldata",stallData)
-useEffect (()  => {
-  const fetchUserData = async () => {
-    try {
-      const token = localStorage.getItem('token') || sessionStorage.getItem('token')
-      const response = await axios.get(`http://localhost:3001/api/users/me`, {
-        headers: {
-          Authorization: `Bearer ${token}`
+  const currentUser = CurrentUser();
+
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      if (currentUser) {
+        try {
+          // Fetch user data
+          const token = localStorage.getItem('token') || sessionStorage.getItem('token')
+          const userResponse = await axios.get(`http://localhost:3001/api/users/me`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          setUserData(userResponse.data);
+
+          // Fetch recent orders
+          const ordersResponse = await getVendorOrders({
+            sortBy: 'newest',
+            limit: '5',
+          });
+          setRecentOrders(ordersResponse.orders);
+
+        } catch (error) {
+          console.error("Error fetching initial dashboard data:", error);
         }
-      })
-      setUserData(response.data)
-      console.log(response.data, "what")
-    } catch (error) {
-      console.error("Error fethcing user data:", error)
+      }
     };
-  }
-  fetchUserData()
-}, []);
-// console.log('userdata',userData?.full_name)
+    fetchInitialData();
+  }, [currentUser]);
 
   return (
     <main className="min-h-screen bg-background">
@@ -162,7 +154,7 @@ useEffect (()  => {
                   <Link href="/vendor/orders">All Orders</Link>
                 </Button>
               </div>
-              <VendorOrdersTable />
+              <VendorOrdersTable orders={recentOrders} />
             </Card>
           </TabsContent>
 

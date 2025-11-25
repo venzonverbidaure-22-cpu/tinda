@@ -11,3 +11,13 @@ export const getVendorOrders = async (params: any) => {
     throw error;
   }
 };
+
+export const updateOrderStatus = async (orderId: number, status: string) => {
+  try {
+    const response = await axios.patch(`${API_URL}/${orderId}/status`, { status });
+    return response.data;
+  } catch (error) {
+    console.error('Error updating order status:', error);
+    throw error;
+  }
+};

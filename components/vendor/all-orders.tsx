@@ -31,7 +31,7 @@ export function AllOrders() {
 
   useEffect(() => {
     if (currentUser) {
-      getStallsByVendor(currentUser.user_id).then(setStalls)
+      getStallsByVendor(currentUser.id).then(setStalls)
     }
   }, [currentUser])
 

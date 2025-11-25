@@ -3,21 +3,43 @@
 import { mockOrders } from "@/lib/mock-data"
 import { Badge } from "@/components/ui/badge"
 import { useState, useEffect } from "react"
+import { updateOrderStatus } from "@/lib/services/orderService"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 export function VendorOrdersTable({ orders: initialOrders }: { orders?: any[] }) {
   const [orders, setOrders] = useState(initialOrders || mockOrders)
 
   useEffect(() => {
-    setOrders(initialOrders || mockOrders)
+    setOrders(initialOrders || [])
   }, [initialOrders])
 
-  const handleStatusChange = (orderId: string, newStatus: string) => {
-    // setOrders(
-    //   orders.map((order) =>
-    //     order.id === orderId ? { ...order, status: newStatus as any } : order
-    //   )
-    // )
-  }
+  const handleStatusChange = async (orderId: number, newStatus: string) => {
+    try {
+      const updatedOrder = await updateOrderStatus(orderId, newStatus);
+      setOrders(currentOrders =>
+        currentOrders.map(order => {
+          const isApiOrder = !!order.orders;
+          const orderData = isApiOrder ? order.orders : order;
+          if ((orderData.order_id || orderData.id) === orderId) {
+            if (isApiOrder) {
+              return { ...order, orders: { ...order.orders, status: newStatus } };
+            }
+            return { ...order, status: newStatus };
+          }
+          return order;
+        })
+      );
+    } catch (error) {
+      console.error("Failed to update order status:", error);
+      // Optionally, revert the UI change or show an error message
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -45,37 +67,35 @@ export function VendorOrdersTable({ orders: initialOrders }: { orders?: any[] })
             <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">Customer ID</th>
             <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">Amount</th>
             <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">Status</th>
-            <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">Action</th>
           </tr>
         </thead>
         <tbody>
           {orders.map((order) => {
             const isApiOrder = !!order.orders;
             const orderData = isApiOrder ? order.orders : order;
+            const orderId = orderData.order_id || orderData.id;
 
             return (
-              <tr key={orderData.order_id || orderData.id} className="border-b border-border hover:bg-muted/50">
-                <td className="px-4 py-3 text-sm text-foreground font-medium">{orderData.order_id || orderData.id}</td>
+              <tr key={orderId} className="border-b border-border hover:bg-muted/50">
+                <td className="px-4 py-3 text-sm text-foreground font-medium">{orderId}</td>
                 <td className="px-4 py-3 text-sm text-muted-foreground">{orderData.buyer_id || orderData.buyerId}</td>
                 <td className="px-4 py-3 text-sm font-semibold text-primary">₱{orderData.total_amount || orderData.totalAmount}</td>
                 <td className="px-4 py-3">
-                  <Badge className={getStatusColor(orderData.status)}>
-                    {orderData.status.charAt(0).toUpperCase() + orderData.status.slice(1).replace("-", " ")}
-                  </Badge>
-                </td>
-                <td className="px-4 py-3">
-                  <select
+                  <Select
                     value={orderData.status}
-                    onChange={(e) => handleStatusChange(orderData.order_id || orderData.id, e.target.value)}
-                    className="rounded-md border border-input bg-background px-2 py-1 text-sm"
-                    disabled
+                    onValueChange={(newStatus) => handleStatusChange(orderId, newStatus)}
                   >
-                    <option value="pending">Pending</option>
-                    <option value="confirmed">Confirmed</option>
-                    <option value="shipped">Shipped</option>
-                    <option value="delivered">Delivered</option>
-                    <option value="cancelled">Cancelled</option>
-                  </select>
+                    <SelectTrigger className={`w-36 ${getStatusColor(orderData.status)}`}>
+                      <SelectValue placeholder="Set Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="confirmed">Confirmed</SelectItem>
+                      <SelectItem value="shipped">Shipped</SelectItem>
+                      <SelectItem value="delivered">Delivered</SelectItem>
+                      <SelectItem value="cancelled">Cancelled</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </td>
               </tr>
             )
