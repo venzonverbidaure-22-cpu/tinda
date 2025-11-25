@@ -11,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { format } from "date-fns"
 
 export function VendorOrdersTable({ orders: initialOrders }: { orders?: any[] }) {
   const [orders, setOrders] = useState(initialOrders || mockOrders)
@@ -66,6 +67,7 @@ export function VendorOrdersTable({ orders: initialOrders }: { orders?: any[] })
             <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">Order ID</th>
             <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">Customer ID</th>
             <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">Amount</th>
+            <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">Created Date</th>
             <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">Status</th>
           </tr>
         </thead>
@@ -74,12 +76,14 @@ export function VendorOrdersTable({ orders: initialOrders }: { orders?: any[] })
             const isApiOrder = !!order.orders;
             const orderData = isApiOrder ? order.orders : order;
             const orderId = orderData.order_id || orderData.id;
+            const createdDate = orderData.created_at || orderData.createdAt;
 
             return (
               <tr key={orderId} className="border-b border-border hover:bg-muted/50">
                 <td className="px-4 py-3 text-sm text-foreground font-medium">{orderId}</td>
                 <td className="px-4 py-3 text-sm text-muted-foreground">{orderData.buyer_id || orderData.buyerId}</td>
                 <td className="px-4 py-3 text-sm font-semibold text-primary">₱{orderData.total_amount || orderData.totalAmount}</td>
+                <td className="px-4 py-3 text-sm text-muted-foreground">{format(new Date(createdDate), "MMMM d, yyyy")}</td>
                 <td className="px-4 py-3">
                   <Select
                     value={orderData.status}
