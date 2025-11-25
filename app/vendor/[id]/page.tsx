@@ -15,23 +15,6 @@ export default function VendorPage() {
   const id = params.id
   const [vendor, setVendor] = useState<Vendor | null>(null)
   const [products, setProducts] = useState<Product[]>([])
-
-   const getImageUrl = (imagePath: string | null | undefined) => {
-    if (!imagePath) return "/placeholder.svg";
-    
-    // Convert backslashes to forward slashes (Windows to URL format)
-    const cleanPath = imagePath.replace(/\\/g, '/');
-    
-    // Remove 'uploads/' prefix if it exists
-    const filename = cleanPath.replace(/^uploads\//, '');
-    
-    // Create proper URL for static file serving
-    const finalUrl = `http://localhost:3001/uploads/${filename}`;
-    
-    console.log("Generated image URL:", finalUrl);
-    return finalUrl;
-  };
-  
   useEffect(() => {
     if (id) {
       const fetchVendorAndProducts = async () => {
@@ -66,7 +49,6 @@ export default function VendorPage() {
       </main>
     )
   }
-
 
 
 
