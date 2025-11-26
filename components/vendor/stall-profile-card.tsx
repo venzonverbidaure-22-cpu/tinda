@@ -27,6 +27,7 @@ interface Stall {
 export function StallProfileCard() {
   const [stalls, setStalls] = useState<Stall[]>([]);
   const [selectedStall, setSelectedStall] = useState<Stall | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchStalls = async () => {
