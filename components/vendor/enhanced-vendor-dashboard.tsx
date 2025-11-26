@@ -12,7 +12,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { TrendingUp, ShoppingCart, Star } from "lucide-react"
 import Link from "next/link"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import axios from "axios"
 import { CreateStallModal } from "./CreateStallModal"
 import { ProductListings } from "./product-listing" 
@@ -45,7 +45,8 @@ export function EnhancedVendorDashboard() {
   const [weeklyOrders, setWeeklyOrders] = useState(0);
   const [isCreateStallModalOpen, setIsCreateStallModalOpen] = useState(false);
   const [shopStatus, setShopStatus] = useState<"active" | "inactive" | "pending">("pending");
-  const currentUser = CurrentUser();
+  const currentUser = useMemo(() => CurrentUser(), []);
+
 
   useEffect(() => {
     const fetchInitialData = async () => {

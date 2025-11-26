@@ -5,7 +5,7 @@ import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
-import { X } from "lucide-react"
+import { X, Upload, Image as ImageIcon } from "lucide-react"
 import { triggerProductListingsRefresh } from "./product-listing"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
@@ -30,11 +30,20 @@ export function AddProductModal({ onClose }: AddProductModalProps) {
     stock: "",
     description: "",
   })
+  const [productImage, setProductImage] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string>("")
   const [stalls, setStalls] = useState<Stall[]>([])
   const [selectedStallId, setSelectedStallId] = useState<string>("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isLoadingStalls, setIsLoadingStalls] = useState(true)
   const [error, setError] = useState<string>("")
+
+  // Clean up preview URL
+  useEffect(() => {
+    return () => {
+      if (imagePreview) URL.revokeObjectURL(imagePreview);
+    };
+  }, [imagePreview]);
 
   // Fetch user's stalls when component mounts
   useEffect(() => {
@@ -44,52 +53,37 @@ export function AddProductModal({ onClose }: AddProductModalProps) {
         setError("")
         
         const token = localStorage.getItem("token")
-        console.log("Token found:", !!token)
         
         if (!token) {
           setError("No authentication token found")
           return
         }
 
-        // Get current user ID from token
         try {
           const payload = JSON.parse(atob(token.split('.')[1]));
           const userId = payload.id;
-          console.log("User ID from token:", userId)
 
           if (!userId) {
             setError("User not authenticated")
             return
           }
 
-          console.log("Fetching stalls for user:", userId)
           const response = await fetch(`${BACKEND_URL}/api/stalls/vendor/${userId}`, {
             headers: {
               "Authorization": `Bearer ${token}`
             }
           })
-
-          console.log("Response status:", response.status)
           
           if (!response.ok) {
             const errorText = await response.text()
-            console.error("API error:", errorText)
             throw new Error(`Failed to fetch stalls: ${response.status}`)
           }
 
           const userStalls = await response.json()
-          console.log("Stalls received:", userStalls)
-          if (!Array.isArray(userStalls)) {
-            console.error("Invalid stalls data:", userStalls)
-            throw new Error("Invalid stalls data received")
-          }
-
           setStalls(userStalls)
 
-          // Auto-select the first stall if available
           if (userStalls.length > 0) {
             const firstStallId = String(userStalls[0].stall_id)
-            console.log("Auto-selecting stall:", firstStallId)
             setSelectedStallId(firstStallId)
           } else {
             setError("No stalls found. Please create a stall first.")
@@ -112,8 +106,26 @@ export function AddProductModal({ onClose }: AddProductModalProps) {
   }, [])
 
   const handleStallChange = (value: string) => {
-    console.log("Stall changed to:", value)
     setSelectedStallId(value)
+  }
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    
+    if (file) {
+      // Validate file type and size
+      if (!file.type.startsWith('image/')) {
+        alert("❌ Please upload only image files");
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        alert("❌ Image size should be less than 5MB");
+        return;
+      }
+      
+      setProductImage(file);
+      setImagePreview(URL.createObjectURL(file));
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -139,24 +151,29 @@ export function AddProductModal({ onClose }: AddProductModalProps) {
         return
       }
 
-      const requestBody = {
-        stall_id: Number(selectedStallId),
-        item_name: formData.name.trim(),
-        category: formData.category,
-        price: parseFloat(formData.price),
-        item_stocks: parseInt(formData.stock) || 0,
-        item_description: formData.description.trim(),
+      // ✅ Use FormData instead of JSON to support file upload
+      const formDataToSend = new FormData();
+      formDataToSend.append("stall_id", selectedStallId);
+      formDataToSend.append("item_name", formData.name.trim());
+      formDataToSend.append("category", formData.category);
+      formDataToSend.append("price", formData.price);
+      formDataToSend.append("item_stocks", formData.stock || "0");
+      formDataToSend.append("item_description", formData.description.trim());
+
+      // ✅ Append image file if selected
+      if (productImage) {
+        formDataToSend.append("product_image", productImage);
       }
 
-      console.log("Sending request with:", requestBody)
+      console.log("Sending FormData with image:", !!productImage);
 
-      const res = await fetch("http://localhost:3001/api/products", {
+      const res = await fetch(`${BACKEND_URL}/api/products`, {
         method: "POST",
         headers: { 
-          "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`
+          // Don't set Content-Type - let browser set it with boundary
         },
-        body: JSON.stringify(requestBody),
+        body: formDataToSend,
       })
 
       if (!res.ok) {
@@ -178,17 +195,9 @@ export function AddProductModal({ onClose }: AddProductModalProps) {
     }
   }
 
-  // Debug info
-  console.log("Current state:", {
-    stallsCount: stalls.length,
-    selectedStallId,
-    isLoadingStalls,
-    error,
-  })
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <Card className="w-full max-w-md p-6">
+      <Card className="w-full max-w-md p-6 max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-bold text-foreground">Add New Product</h2>
@@ -228,12 +237,53 @@ export function AddProductModal({ onClose }: AddProductModalProps) {
             )}
           </div>
 
-          {/* Show selected stall info for debugging */}
-          {selectedStallId && (
-            <div className="text-xs text-muted-foreground">
-              Selected: {stalls.find(s => `${s.stall_id} === selectedStallId`)?.stall_name}
+          {/* ✅ NEW: Product Image Upload */}
+          <div>
+            <label className="text-sm font-medium text-foreground">Product Image</label>
+            <div className="mt-2 space-y-3">
+              {imagePreview ? (
+                <div className="relative">
+                  <img 
+                    src={imagePreview} 
+                    alt="Product preview" 
+                    className="w-full h-32 object-cover rounded-lg border"
+                  />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    className="absolute top-2 right-2 h-6 w-6 p-0"
+                    onClick={() => {
+                      setProductImage(null);
+                      setImagePreview("");
+                    }}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+                  <ImageIcon className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                  <p className="text-sm text-gray-500 mb-2">Upload product image</p>
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="hidden"
+                    id="product-image"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => document.getElementById('product-image')?.click()}
+                  >
+                    <Upload className="h-4 w-4 mr-2" />
+                    Choose Image
+                  </Button>
+                </div>
+              )}
             </div>
-          )}
+          </div>
 
           {/* Product Name */}
           <div>

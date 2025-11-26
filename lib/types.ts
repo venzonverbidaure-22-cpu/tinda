@@ -4,6 +4,7 @@ export type PaymentStatus = "pending" | "paid" | "failed" | "refunded"
 export type PaymentMethod = "cod" | "gcash" | "bank-transfer"
 export interface User {
   id: string
+  user_id: string
   full_name: string
   email: string
   role: UserRole
@@ -107,6 +108,8 @@ export interface Product {
   // vendorId: string
   // name: string
   // category: string
+  
+  in_stock: boolean
   image: string
 }
 
