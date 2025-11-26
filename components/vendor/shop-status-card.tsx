@@ -30,10 +30,11 @@ function ShopStatusDropdown({
   return (
     <Select value={status} onValueChange={onStatusChange}>
       <SelectTrigger className="w-auto">
-        <SelectValue placeholder="Set status" />
+        <SelectValue>
+          {status === "pending" ? "Pending" : status === "active" ? "Active" : "Inactive"}
+        </SelectValue>
       </SelectTrigger>
       <SelectContent>
-        <SelectItem value="pending" disabled>Pending</SelectItem>
         <SelectItem value="active">Active</SelectItem>
         <SelectItem value="inactive">Inactive</SelectItem>
       </SelectContent>
