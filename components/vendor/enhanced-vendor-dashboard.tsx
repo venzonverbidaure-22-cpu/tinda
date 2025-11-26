@@ -19,6 +19,7 @@ import { ProductListings } from "./product-listing"
 import { AddProductModal } from "./add-product-modal"
 import { CurrentUser } from "@/lib/utils"
 import { getVendorOrders, getVendorOrderStats } from "@/lib/services/orderService"
+import { getStallById, updateStallStatus, getStallsByVendor } from "@/lib/services/stallService"
 
 interface UserData {
   email: string,
@@ -43,6 +44,7 @@ export function EnhancedVendorDashboard() {
   const [totalOrders, setTotalOrders] = useState(0);
   const [weeklyOrders, setWeeklyOrders] = useState(0);
   const [isCreateStallModalOpen, setIsCreateStallModalOpen] = useState(false);
+  const [shopStatus, setShopStatus] = useState<"active" | "inactive" | "pending">("pending");
   const currentUser = CurrentUser();
 
   useEffect(() => {
@@ -62,6 +64,27 @@ export function EnhancedVendorDashboard() {
             limit: '5',
           });
           setRecentOrders(ordersResponse.orders);
+
+          // Fetch stall status
+          const selectedStallId = localStorage.getItem("selectedStallId");
+          if (selectedStallId) {
+            const stallData = await getStallById(Number(selectedStallId));
+            if (stallData && stallData.status) {
+              setShopStatus(stallData.status);
+            }
+          } else {
+            const vendorStalls = await getStallsByVendor(currentUser.user_id);
+            if (vendorStalls && vendorStalls.length > 0) {
+              const firstStallId = vendorStalls[0].stall_id;
+              localStorage.setItem("selectedStallId", firstStallId);
+              const stallData = await getStallById(firstStallId);
+              if (stallData && stallData.status) {
+                setShopStatus(stallData.status);
+              }
+            } else {
+              setShopStatus("inactive");
+            }
+          }
 
         } catch (error) {
           console.error("Error fetching initial dashboard data:", error);
@@ -88,6 +111,18 @@ export function EnhancedVendorDashboard() {
     };
     fetchOrderStats();
   }, [localStorage.getItem("selectedStallId")]); // Re-fetch when selectedStallId changes in local storage
+
+  const handleStatusChange = async (status: "active" | "inactive") => {
+    const selectedStallId = localStorage.getItem("selectedStallId");
+    if (selectedStallId) {
+      try {
+        await updateStallStatus(Number(selectedStallId), status);
+        setShopStatus(status);
+      } catch (error) {
+        console.error("Error updating stall status:", error);
+      }
+    }
+  };
 
 
   return (
@@ -118,7 +153,11 @@ export function EnhancedVendorDashboard() {
           <TabsContent value="overview" className="space-y-6">
             <div className="grid gap-6 lg:grid-cols-3">
               {/* Shop Status - SCRUM-21 */}
-              <ShopStatusCard shopStatus="inactive" openCreateStallModal={() => setIsCreateStallModalOpen(true)} />
+              <ShopStatusCard 
+                shopStatus={shopStatus} 
+                openCreateStallModal={() => setIsCreateStallModalOpen(true)}
+                onStatusChange={handleStatusChange}
+              />
 
               {/* Virtual Stall Profile - SCRUM-9 */}
               <div className="lg:col-span-2">

@@ -131,6 +131,9 @@ export function CreateStallModal({ isOpen, onClose }: CreateStallModalProps) {
 
     alert("✅ Stall created successfully!");
     console.log(res.data);
+    if (res.data && res.data.stall_id) {
+      localStorage.setItem("selectedStallId", res.data.stall_id);
+    }
     onClose();
     window.location.href = "/vendor/dashboard";
 
