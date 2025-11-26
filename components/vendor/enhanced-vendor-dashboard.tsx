@@ -18,7 +18,7 @@ import { CreateStallModal } from "./CreateStallModal"
 import { ProductListings } from "./product-listing" 
 import { AddProductModal } from "./add-product-modal"
 import { CurrentUser } from "@/lib/utils"
-import { getVendorOrders } from "@/lib/services/orderService"
+import { getVendorOrders, getVendorOrderStats } from "@/lib/services/orderService"
 
 interface UserData {
   email: string,
@@ -40,6 +40,8 @@ const salesData = [
 export function EnhancedVendorDashboard() {
   const [userData, setUserData] = useState<UserData | null>(null);
   const [recentOrders, setRecentOrders] = useState([]);
+  const [totalOrders, setTotalOrders] = useState(0);
+  const [weeklyOrders, setWeeklyOrders] = useState(0);
   const [isCreateStallModalOpen, setIsCreateStallModalOpen] = useState(false);
   const currentUser = CurrentUser();
 
@@ -68,6 +70,25 @@ export function EnhancedVendorDashboard() {
     };
     fetchInitialData();
   }, [currentUser]);
+
+  useEffect(() => {
+    const fetchOrderStats = async () => {
+      const selectedStallId = localStorage.getItem("selectedStallId");
+      if (selectedStallId) {
+        try {
+          const stats = await getVendorOrderStats(Number(selectedStallId));
+          setTotalOrders(stats.totalOrders);
+          setWeeklyOrders(stats.weeklyOrders);
+        } catch (error) {
+          console.error("Error fetching order stats:", error);
+          setTotalOrders(0);
+          setWeeklyOrders(0);
+        }
+      }
+    };
+    fetchOrderStats();
+  }, [localStorage.getItem("selectedStallId")]); // Re-fetch when selectedStallId changes in local storage
+
 
   return (
     <main className="min-h-screen bg-background">
@@ -125,8 +146,8 @@ export function EnhancedVendorDashboard() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-muted-foreground">Total Orders</p>
-                    <p className="text-2xl font-bold text-foreground">245</p>
-                    <p className="mt-1 text-xs text-green-600">+8 this week</p>
+                    <p className="text-2xl font-bold text-foreground">{totalOrders}</p>
+                    <p className="mt-1 text-xs text-green-600">+{weeklyOrders} this week</p>
                   </div>
                   <ShoppingCart className="h-8 w-8 text-accent" />
                 </div>
