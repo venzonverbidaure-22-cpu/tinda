@@ -8,10 +8,17 @@ import { useState, useEffect } from "react"
 import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
 import axios from "axios"
+import { useParams } from "next/navigation"
+
+import { useRouter } from "next/navigation"
 
 const BACKEND_URL = "http://localhost:3001";
 
 export default function VendorStorePage() {
+  const params = useParams();
+  const { id } = params;
+  const router = useRouter();
+
   const [isEditing, setIsEditing] = useState(false)
   const [storeData, setStoreData] = useState({
     name: "",
@@ -36,10 +43,9 @@ export default function VendorStorePage() {
     }
   }
 
-  useEffect(() => {
-    const fetchStoreData = async () => {
+  const fetchStoreData = async () => {
       try {
-        const response = await axios.get(`${BACKEND_URL}/api/stalls/1`);
+        const response = await axios.get(`${BACKEND_URL}/api/stalls/${id}`);
         const { stall_name, stall_address, stall_description, vendor_contact, category, icon_url, banner_url } = response.data;
         setStoreData({
           ...storeData,
@@ -56,8 +62,11 @@ export default function VendorStorePage() {
       }
     };
 
-    fetchStoreData();
-  }, []);
+  useEffect(() => {
+    if (id) {
+      fetchStoreData();
+    }
+  }, [id]);
 
   const handleSave = async () => {
     try {
@@ -74,7 +83,7 @@ export default function VendorStorePage() {
         formData.append("banner_image", storeData.banner_image);
       }
 
-      const response = await axios.patch(`${BACKEND_URL}/api/stalls/1`, formData, {
+      const response = await axios.patch(`${BACKEND_URL}/api/stalls/${id}`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -82,6 +91,8 @@ export default function VendorStorePage() {
       console.log(response.data);
       setIsEditing(false)
       alert("Store profile updated successfully!")
+      fetchStoreData();
+      router.push('/vendor/dashboard');
     } catch (error) {
       console.error("Error updating store data:", error);
       alert("Error updating store data. Please try again.");

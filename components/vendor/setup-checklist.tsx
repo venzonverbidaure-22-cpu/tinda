@@ -83,7 +83,7 @@ export function SetupChecklist({
             key={item.id}
             className="flex gap-4 rounded-lg border border-border p-4 hover:bg-muted/50 transition-colors"
           >
-            <div className="mt-1 flex-shrink-0">
+            <div className="mt-1 shrink-0">
               {item.completed ? (
                 <Check className="h-5 w-5 text-green-600" />
               ) : (

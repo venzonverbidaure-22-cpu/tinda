@@ -95,7 +95,7 @@ export function OrderDetailModal({ orderId, onClose }: OrderDetailModalProps) {
           <div className="mt-6 border-t border-border pt-6">
             <h3 className="font-semibold text-foreground">Delivery Information</h3>
             <div className="mt-3 flex gap-2 rounded-lg bg-muted p-3">
-              <MapPin className="h-5 w-5 flex-shrink-0 text-primary" />
+              <MapPin className="h-5 w-5 shrink-0 text-primary" />
               <div>
                 <p className="text-sm font-medium text-foreground">Delivery Address</p>
                 <p className="text-sm text-muted-foreground">{order.deliveryAddress}</p>

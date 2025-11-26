@@ -9,7 +9,7 @@ import Image from "next/image"
 
 export function LandingPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
+    <div className="min-h-screen bg-linear-to-b from-background to-muted/20">
       {/* Hero Section */}
       <section className="px-6 py-20 text-center md:py-32">
         <div className="mx-auto max-w-3xl space-y-6">
@@ -79,27 +79,27 @@ export function LandingPage() {
       </section>
 
       {/* Featured Vendors */}
-      <section className="px-6 py-20 md:py-32">
+      {/* <section className="px-6 py-20 md:py-32">
         <div className="mx-auto max-w-5xl">
           <h2 className="mb-16 text-center text-3xl font-bold">Featured Vendors</h2>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             {mockVendors.map((vendor) => (
               <Card key={vendor.id} className="overflow-hidden">
                 <div className="relative h-32 w-full bg-muted">
-                  <Image src={vendor.banner || "/placeholder.svg"} alt={vendor.name} fill className="object-cover" />
+                  <Image src={vendor.banner_photo || "/placeholder.svg"} alt={vendor.full_name} fill className="object-cover" />
                 </div>
                 <div className="p-4">
                   <div className="mb-2 flex items-center gap-2">
-                    <div className="relative h-10 w-10 flex-shrink-0 rounded-full bg-muted">
+                    <div className="relative h-10 w-10 shrink-0 rounded-full bg-muted">
                       <Image
-                        src={vendor.logo || "/placeholder.svg"}
-                        alt={vendor.name}
+                        src={vendor.stall_icon|| "/placeholder.svg"}
+                        alt={vendor.full_name}
                         fill
                         className="rounded-full object-cover"
                       />
                     </div>
                     <div className="flex-1">
-                      <h3 className="font-semibold text-sm">{vendor.name}</h3>
+                      <h3 className="font-semibold text-sm">{vendor.full_name}</h3>
                       <p className="text-xs text-muted-foreground">{vendor.location}</p>
                     </div>
                   </div>
@@ -111,8 +111,8 @@ export function LandingPage() {
               </Card>
             ))}
           </div>
-        </div>
-      </section>
+        </div> */}
+      {/* </section> */}
 
       {/* CTA Section */}
       <section className="px-6 py-20 text-center md:py-32">

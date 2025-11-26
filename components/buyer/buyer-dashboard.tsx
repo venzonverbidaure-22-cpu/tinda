@@ -11,7 +11,7 @@ import { useEffect, useState } from "react"
 export function BuyerDashboard() {
   const { currentUser, selectedLocation } = useApp()
   const [vendors, setVendors] = useState<Vendor[]>([])
-
+  console.log("this is the current",currentUser) 
   useEffect(() => {
     const fetchVendors = async () => {
       try {
@@ -26,11 +26,13 @@ export function BuyerDashboard() {
     fetchVendors()
   }, [])
 
+console.log("999999999999999999999999999999999999999999999999999999",vendors)
+
   return (
     <div className="space-y-8 px-6 py-8">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Welcome back, {currentUser?.name?.split(" ")[0]}!</h1>
+          <h1 className="text-3xl font-bold text-foreground">Welcome back, {currentUser?.full_name}!</h1>
           <p className="mt-1 text-muted-foreground">
             {selectedLocation ? `Shopping in ${selectedLocation}` : "Select a location to get started"}
           </p>
@@ -57,10 +59,11 @@ export function BuyerDashboard() {
         <h2 className="mb-6 text-2xl font-bold text-foreground">Featured Vendors</h2>
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {vendors.map((vendor) => (
-            <VendorCard key={vendor.stall_id} vendor={vendor} />
+            <VendorCard key={vendor.stall_id} vendor={vendor}/>
           ))}
         </div>
       </div>
     </div>
   )
+
 }

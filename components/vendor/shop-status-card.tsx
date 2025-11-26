@@ -8,9 +8,11 @@ import { useState } from "react"
 
 interface ShopStatusCardProps {
   shopStatus?: "active" | "inactive" | "pending"
+  userId?: number // you'll pass this in from logged-in user
+  openCreateStallModal: () => void
 }
 
-export function ShopStatusCard({ shopStatus = "inactive" }: ShopStatusCardProps) {
+export function ShopStatusCard({ shopStatus = "inactive", userId, openCreateStallModal }: ShopStatusCardProps) {
   const [isOpening, setIsOpening] = useState(false)
 
   const statusConfig = {
@@ -40,16 +42,6 @@ export function ShopStatusCard({ shopStatus = "inactive" }: ShopStatusCardProps)
   const config = statusConfig[shopStatus]
   const Icon = config.icon
 
-  const handleOpenShop = async () => {
-    setIsOpening(true)
-    // Frontend state only - backend integration will go here
-    console.log("[v0] Opening shop...")
-    setTimeout(() => {
-      setIsOpening(false)
-      alert("Shop opened successfully!")
-    }, 1000)
-  }
-
   return (
     <Card className="p-6">
       <div className="flex items-start justify-between">
@@ -67,16 +59,16 @@ export function ShopStatusCard({ shopStatus = "inactive" }: ShopStatusCardProps)
         </div>
       </div>
 
-      {shopStatus === "inactive" && (
-        <div className="mt-6">
-          <Button onClick={handleOpenShop} disabled={isOpening} className="w-full">
-            {isOpening ? "Opening Shop..." : "Open Shop"}
-          </Button>
-          <p className="mt-3 text-xs text-muted-foreground">
-            Your shop will be visible to local buyers once opened. You can start listing products immediately.
-          </p>
-        </div>
-      )}
+          {shopStatus === "inactive" && (
+      <div className="mt-6">
+        <Button onClick={openCreateStallModal} className="w-full">
+          Create Stall
+        </Button>
+        <p className="mt-3 text-xs text-muted-foreground">
+          Your shop will be visible to local buyers once opened. You can start listing products immediately.
+        </p>
+      </div>
+)}
 
       {shopStatus === "active" && (
         <div className="mt-4 space-y-2 rounded-lg bg-green-50 p-4">

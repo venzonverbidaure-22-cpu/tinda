@@ -2,7 +2,6 @@
 
 import { Navbar } from "@/components/navbar"
 import { useApp } from "@/lib/context"
-import { mockProducts } from "@/lib/mock-data"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -10,17 +9,25 @@ import { Trash2, ArrowLeft } from "lucide-react"
 import Link from "next/link"
 import { useState } from "react"
 import { CheckoutModal } from "@/components/buyer/checkout-modal"
+import type { LineItem } from "@/lib/types" // Make sure to import LineItem
+
+// ✅ TEMPORARY FIX: Add this interface
+interface CartItemWithStall extends LineItem {
+  stall?: {
+    stall_id: number
+    stall_name: string
+    user_id: number
+  }
+}
 
 export default function CartPage() {
   const { cart, removeFromCart, updateCartQuantity } = useApp()
   const [showCheckout, setShowCheckout] = useState(false)
 
-  const cartItems = cart.map((item) => ({
-    ...item,
-    product: mockProducts.find((p) => p.id === item.productId),
-  }))
-
-  const totalAmount = cart.reduce((sum, item) => sum + item.price * item.quantity, 0)
+  const totalAmount = cart.reduce((sum, item) => {
+    const price = parseFloat(item.unit_price) || item.price || 0
+    return sum + (price * item.quantity)
+  }, 0)
 
   return (
     <main className="min-h-screen bg-background">
@@ -47,56 +54,70 @@ export default function CartPage() {
           <div className="grid gap-8 lg:grid-cols-3">
             {/* Cart Items */}
             <div className="lg:col-span-2 space-y-4">
-              {cartItems.map((item) => (
-                <Card key={item.productId} className="p-4">
-                  <div className="flex gap-4">
-                    {/* Product Image */}
-                    <img
-                      src={item.product?.image || "/placeholder.svg"}
-                      alt={item.product?.name}
-                      className="h-24 w-24 rounded object-cover"
-                    />
+              {/* ✅ USE THE TEMPORARY FIX HERE */}
+              {cart.map((item) => {
+                const cartItem = item as CartItemWithStall // Type assertion
+                return (
+                  <Card key={cartItem.line_item_id} className="p-4">
+                    <div className="flex gap-4">
+                      {/* Product Image */}
+                      <img
+                        src={cartItem.product?.product_image || "/placeholder.svg"}
+                        alt={cartItem.product?.item_name || "Product"}
+                        className="h-24 w-24 rounded object-cover"
+                      />
 
-                    {/* Product Info */}
-                    <div className="flex-1">
-                      <h3 className="font-bold text-foreground">{item.product?.name}</h3>
-                      <p className="text-sm text-muted-foreground">{item.product?.category}</p>
-                      <p className="mt-2 font-semibold text-primary">₱{item.price}</p>
-                    </div>
+                      {/* Product Info */}
+                      <div className="flex-1">
+                        <h3 className="font-bold text-foreground">{cartItem.product?.item_name || "Product"}</h3>
+                        <p className="text-sm text-muted-foreground">{cartItem.product?.item_description || ""}</p>
+                        <p className="mt-2 font-semibold text-primary">
+                          ₱{parseFloat(cartItem.unit_price) || cartItem.price}
+                        </p>
+                        {/* ✅ NOW THIS WORKS WITHOUT TYPESCRIPT ERROR */}
+                        {cartItem.stall && (
+                          <p className="text-xs text-muted-foreground">From: {cartItem.stall.stall_name}</p>
+                        )}
+                      </div>
 
-                    {/* Quantity and Remove */}
-                    <div className="flex flex-col items-end justify-between">
-                      <Button variant="ghost" size="icon" onClick={() => removeFromCart(item.productId)}>
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => updateCartQuantity(item.productId, item.quantity - 1)}
+                      {/* Quantity and Remove */}
+                      <div className="flex flex-col items-end justify-between">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={() => removeFromCart(cartItem.item_id)}
                         >
-                          -
+                          <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
-                        <Input
-                          type="number"
-                          value={item.quantity}
-                          onChange={(e) => updateCartQuantity(item.productId, Number.parseInt(e.target.value) || 1)}
-                          className="w-12 text-center"
-                          min="1"
-                        />
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => updateCartQuantity(item.productId, item.quantity + 1)}
-                        >
-                          +
-                        </Button>
+
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => updateCartQuantity(cartItem.item_id, cartItem.quantity - 1)}
+                          >
+                            -
+                          </Button>
+                          <Input
+                            type="number"
+                            value={cartItem.quantity}
+                            onChange={(e) => updateCartQuantity(cartItem.item_id, Number.parseInt(e.target.value) || 1)}
+                            className="w-12 text-center"
+                            min="1"
+                          />
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => updateCartQuantity(cartItem.item_id, cartItem.quantity + 1)}
+                          >
+                            +
+                          </Button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </Card>
-              ))}
+                  </Card>
+                )
+              })}
             </div>
 
             {/* Order Summary */}
@@ -107,7 +128,7 @@ export default function CartPage() {
                 <div className="mt-4 space-y-2 border-b border-border pb-4">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Subtotal</span>
-                    <span className="text-foreground">₱{totalAmount}</span>
+                    <span className="text-foreground">₱{totalAmount.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Delivery</span>
@@ -117,7 +138,7 @@ export default function CartPage() {
 
                 <div className="mt-4 flex justify-between font-bold">
                   <span className="text-foreground">Total</span>
-                  <span className="text-lg text-primary">₱{totalAmount + 50}</span>
+                  <span className="text-lg text-primary">₱{(totalAmount + 50).toFixed(2)}</span>
                 </div>
 
                 <Button className="mt-6 w-full" onClick={() => setShowCheckout(true)}>

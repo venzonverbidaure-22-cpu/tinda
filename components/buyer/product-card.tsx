@@ -14,33 +14,40 @@ interface ProductCardProps {
 export function ProductCard({ product }: ProductCardProps) {
   const { addToCart, cart } = useApp()
   const [isAdded, setIsAdded] = useState(false)
+  const [quantity, setQuantity] = useState(1)
 
-  const isInCart = cart.some((item) => item.productId === product.product_id)
+  // Correct ID (stall_items.item_id)
+  const itemId = parseInt(product.product_id)
+
+  const isInCart = cart.some((item) => item.item_id === itemId)
 
   const handleAddToCart = () => {
     addToCart({
-      productId: product.product_id,
-      vendorId: product.stall_id,
-      quantity: 1,
-      price: product.price,
+      item_id: itemId,
+      quantity: quantity   
     })
+
     setIsAdded(true)
     setTimeout(() => setIsAdded(false), 2000)
   }
-
+  console.log("this is the product here 999999999999999999999999999999999999999999999999999",product)
+  
   return (
     <Card className="overflow-hidden transition-all hover:shadow-lg">
-      {/* Product Image */}
       <div className="relative h-40 w-full bg-muted">
-        <img src={product.product_image || "/placeholder.svg"} alt={product.product_name} className="h-full w-full object-cover" />
+        <img 
+          src={product.product_image || "/placeholder.svg"} 
+          alt={product.product_name} 
+          className="h-full w-full object-cover" 
+        />
       </div>
 
-      {/* Content */}
       <div className="p-4">
         <h3 className="font-bold text-foreground">{product.product_name}</h3>
-        <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{product.description}</p>
+        <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
+          {product.description}
+        </p>
 
-        {/* Price and Stock */}
         <div className="mt-3 flex items-center justify-between">
           <div>
             <p className="text-lg font-bold text-primary">₱{product.price}</p>
@@ -48,7 +55,27 @@ export function ProductCard({ product }: ProductCardProps) {
           </div>
         </div>
 
-        {/* Add to Cart Button */}
+        {/* Quantity Selector */}
+        <div className="mt-3 flex items-center gap-2">
+          <Button 
+            size="sm" 
+            variant="outline"
+            onClick={() => setQuantity(q => Math.max(1, q - 1))}
+          >
+            -
+          </Button>
+
+          <span className="text-sm font-semibold w-6 text-center">{quantity}</span>
+
+          <Button 
+            size="sm" 
+            variant="outline"
+            onClick={() => setQuantity(q => Math.min(product.stock, q + 1))}
+          >
+            +
+          </Button>
+        </div>
+
         <Button
           className="mt-4 w-full"
           size="sm"
