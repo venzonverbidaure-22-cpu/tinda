@@ -50,6 +50,24 @@ export function EnhancedVendorDashboard() {
 
 
   useEffect(() => {
+    const fetchRecentOrders = async () => {
+      if (selectedStallIdState) {
+        try {
+          const ordersResponse = await getVendorOrders({
+            sortBy: 'newest',
+            limit: '5',
+            stallId: selectedStallIdState,
+          });
+          setRecentOrders(ordersResponse.orders);
+        } catch (error) {
+          console.error("Error fetching recent orders:", error);
+        }
+      }
+    };
+    fetchRecentOrders();
+  }, [selectedStallIdState]);
+
+  useEffect(() => {
     const fetchInitialData = async () => {
       if (currentUser) {
         try {
@@ -59,13 +77,6 @@ export function EnhancedVendorDashboard() {
             headers: { Authorization: `Bearer ${token}` }
           });
           setUserData(userResponse.data);
-
-          // Fetch recent orders
-          const ordersResponse = await getVendorOrders({
-            sortBy: 'newest',
-            limit: '5',
-          });
-          setRecentOrders(ordersResponse.orders);
 
           // Fetch stall status
           const selectedStallId = localStorage.getItem("selectedStallId");

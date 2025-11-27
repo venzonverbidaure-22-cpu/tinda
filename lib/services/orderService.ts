@@ -4,7 +4,11 @@ const API_URL = 'http://localhost:3001/api/orders';
 
 export const getVendorOrders = async (params: any) => {
   try {
-    const response = await axios.get(`${API_URL}/vendor`, { params });
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    const response = await axios.get(`${API_URL}/vendor`, {
+      params,
+      headers: { Authorization: `Bearer ${token}` }
+    });
     return response.data;
   } catch (error) {
     console.error('Error fetching vendor orders:', error);
@@ -14,7 +18,11 @@ export const getVendorOrders = async (params: any) => {
 
 export const getVendorOrderStats = async (stallId: number) => {
   try {
-    const response = await axios.get(`${API_URL}/stats`, { params: { stallId } });
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    const response = await axios.get(`${API_URL}/stats`, {
+      params: { stallId },
+      headers: { Authorization: `Bearer ${token}` }
+    });
     return response.data;
   } catch (error) {
     console.error('Error fetching vendor order stats:', error);
@@ -24,7 +32,10 @@ export const getVendorOrderStats = async (stallId: number) => {
 
 export const updateOrderStatus = async (orderId: number, status: string) => {
   try {
-    const response = await axios.patch(`${API_URL}/${orderId}/status`, { status });
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    const response = await axios.patch(`${API_URL}/${orderId}/status`, { status }, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
     return response.data;
   } catch (error) {
     console.error('Error updating order status:', error);
