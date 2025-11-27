@@ -14,6 +14,7 @@ import Link from "next/link"
 import { Navbar } from "@/components/navbar"
 import type { UserRole } from "@/lib/types"
 import axios from "axios"
+import { API_BASE_URL } from "@/lib/utils"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -37,7 +38,7 @@ export default function LoginPage() {
 
     await login(email, password, role)
 
-    const response = await axios.post("http://localhost:3001/api/auth/login",{
+    const response = await axios.post(`${API_BASE_URL}/api/auth/login`,{
       email,
       password,
       role

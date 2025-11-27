@@ -7,6 +7,7 @@ import { ProductCard } from "@/components/buyer/product-card"
 import { Card } from "@/components/ui/card"
 import axios from "axios"
 import { useApp } from "@/lib/context" // ✅ use your App context
+import { API_BASE_URL } from "@/lib/utils"
 
 export default function ProductsPage() {
   const { currentUser } = useApp() // ✅ reactive currentUser
@@ -26,7 +27,7 @@ export default function ProductsPage() {
       if (filters.category) params.category = filters.category
       if (filters.search) params.search = filters.search
 
-      const res = await axios.get(`http://localhost:3001/api/products`, {
+      const res = await axios.get(`${API_BASE_URL}/api/products`, {
         params,
         headers: currentUser?.token
           ? { Authorization: `Bearer ${currentUser.token}` } // ✅ token from context

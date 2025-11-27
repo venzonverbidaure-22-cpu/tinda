@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect } from "react"
 import type { UserRole, User, UserStatus, LineItem } from "./types"
+import { API_BASE_URL } from "./utils"
 
 interface AppContextType {
   currentUser: User | null
@@ -132,7 +133,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   // Login
   // ------------------------
   const login = async (email: string, password: string, role: UserRole) => {
-    const res = await fetch("http://localhost:3001/api/auth/login", {
+    const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password, role }),

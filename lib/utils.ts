@@ -51,3 +51,5 @@ export function CurrentUser() {
     return null;
   }
 }
+
+export const API_BASE_URL = 'https://tindabackend-d1y8yqbcc-tindateam.vercel.app';
