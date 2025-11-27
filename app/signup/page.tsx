@@ -1,94 +1,102 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { useApp } from "@/lib/context"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card } from "@/components/ui/card"
-import { Label } from "@/components/ui/label"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import Link from "next/link"
-import { Navbar } from "@/components/navbar"
-import type { UserRole } from "@/lib/types"
-import { json } from "stream/consumers"
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useApp } from "@/lib/context";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import Link from "next/link";
+import { Navbar } from "@/components/navbar";
+import type { UserRole } from "@/lib/types";
+import { json } from "stream/consumers";
 
 export default function SignupPage() {
-  const router = useRouter()
-  const { login } = useApp()
-  const [name, setName] = useState("")
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [confirmPassword, setConfirmPassword] = useState("")
-  const [role, setRole] = useState<UserRole>("buyer")
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState("")
+  const router = useRouter();
+  const { login } = useApp();
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [role, setRole] = useState<UserRole>("buyer");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError("")
-    setIsLoading(true)
+    e.preventDefault();
+    setError("");
+    setIsLoading(true);
 
     try {
-      // Mock validation
       if (!name || !email || !password || !confirmPassword || !role) {
-        setError("Please fill in all fields")
-        setIsLoading(false)
-        return
+        setError("Please fill in all fields");
+        setIsLoading(false);
+        return;
       }
 
       if (password !== confirmPassword) {
-        setError("Passwords do not match")
-        setIsLoading(false)
-        return
+        setError("Passwords do not match");
+        setIsLoading(false);
+        return;
       }
 
       if (password.length < 6) {
-        setError("Password must be at least 6 characters")
-        setIsLoading(false)
-        return
+        setError("Password must be at least 6 characters");
+        setIsLoading(false);
+        return;
       }
 
-     
       const res = await fetch("http://localhost:3001/api/auth/register", {
         method: "POST",
-        headers: {"Content-Type": "application/json"},
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           full_name: name,
-          email, 
+          email,
           password,
-          role
+          role,
         }),
-      })
-      const data = await res.json()
+      });
+      const data = await res.json();
 
       if (!res.ok) {
-        setError(data.message || "Signup Failed")
-        setIsLoading(false)
-        return
+        setError(data.message || "Signup Failed");
+        setIsLoading(false);
+        return;
       }
       const loginRes = await fetch("http://localhost:3001/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({email,password, role}),
-      })
-      const loginData = await loginRes.json()
-      if (loginRes.ok){
-        await login(email, password, role)
+        body: JSON.stringify({ email, password, role }),
+      });
+      const loginData = await loginRes.json();
+      if (loginRes.ok) {
+        const { token, user } = loginData;
+
+        //saves token + user info
+        localStorage.setItem("token", token);
+        localStorage.setItem("user_id", user.id.toString());
+        localStorage.setItem("user_role", user.role);
+        localStorage.setItem("user_email", user.email);
+        localStorage.setItem("user_full_name", user.full_name);
+
+        await login(email, password, role);
+
         if (role === "vendor") {
-          router.push("/vendor/dashboard")
+          router.push("/");
         } else {
-          router.push("/")
+          router.push("/");
         }
       }
     } catch (err) {
-      setError("Signup failed. Please try again.")
+      setError("Signup failed. Please try again.");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -97,14 +105,19 @@ export default function SignupPage() {
         <Card className="w-full max-w-md p-8">
           <div className="mb-8 text-center">
             <h1 className="text-3xl font-bold">Create Account</h1>
-            <p className="mt-2 text-muted-foreground">Join Tinda and start shopping or selling</p>
+            <p className="mt-2 text-muted-foreground">
+              Join Tinda and start shopping or selling
+            </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Role Selection */}
             <div className="space-y-3">
               <Label className="text-base font-semibold">I want to:</Label>
-              <RadioGroup value={role} onValueChange={(value) => setRole(value as UserRole)}>
+              <RadioGroup
+                value={role}
+                onValueChange={(value) => setRole(value as UserRole)}
+              >
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="buyer" id="buyer" />
                   <Label htmlFor="buyer" className="font-normal cursor-pointer">
@@ -113,7 +126,10 @@ export default function SignupPage() {
                 </div>
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="vendor" id="vendor" />
-                  <Label htmlFor="vendor" className="font-normal cursor-pointer">
+                  <Label
+                    htmlFor="vendor"
+                    className="font-normal cursor-pointer"
+                  >
                     Sell products
                   </Label>
                 </div>
@@ -173,7 +189,11 @@ export default function SignupPage() {
             </div>
 
             {/* Error Message */}
-            {error && <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">{error}</div>}
+            {error && (
+              <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+                {error}
+              </div>
+            )}
 
             {/* Submit Button */}
             <Button type="submit" className="w-full" disabled={isLoading}>
@@ -183,13 +203,18 @@ export default function SignupPage() {
 
           {/* Sign In Link */}
           <div className="mt-6 text-center text-sm">
-            <span className="text-muted-foreground">Already have an account? </span>
-            <Link href="/login" className="font-semibold text-primary hover:underline">
+            <span className="text-muted-foreground">
+              Already have an account?{" "}
+            </span>
+            <Link
+              href="/login"
+              className="font-semibold text-primary hover:underline"
+            >
               Sign in
             </Link>
           </div>
         </Card>
       </div>
     </div>
-  )
+  );
 }

@@ -1,7 +1,13 @@
 "use client"
 
 import { EnhancedVendorDashboard } from "@/components/vendor/enhanced-vendor-dashboard"
+import { Navbar } from "@/components/navbar"
 
 export default function VendorDashboardPage() {
-  return <EnhancedVendorDashboard />
+  return (
+    <>
+      <Navbar />
+      <EnhancedVendorDashboard />
+    </>
+  )
 }

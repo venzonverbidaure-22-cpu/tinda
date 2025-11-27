@@ -5,15 +5,49 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Store, AlertCircle, CheckCircle } from "lucide-react"
 import { useState } from "react"
-import { CreateStallModal } from "./CreateStallModal"
-
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 interface ShopStatusCardProps {
   shopStatus?: "active" | "inactive" | "pending"
-  userId?: number // you'll pass this in from logged-in user
+  userId?: number
+  openCreateStallModal: () => void
+  onStatusChange: (status: "active" | "inactive") => void
 }
 
-export function ShopStatusCard({ shopStatus = "inactive", userId }: ShopStatusCardProps) {
+function ShopStatusDropdown({
+  status,
+  onStatusChange,
+}: {
+  status: "active" | "inactive" | "pending"
+  onStatusChange: (status: "active" | "inactive") => void
+}) {
+  return (
+    <Select value={status} onValueChange={onStatusChange}>
+      <SelectTrigger className="w-auto">
+        <SelectValue>
+          {status === "pending" ? "Pending" : status === "active" ? "Active" : "Inactive"}
+        </SelectValue>
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="active">Active</SelectItem>
+        <SelectItem value="inactive">Inactive</SelectItem>
+      </SelectContent>
+    </Select>
+  )
+}
+
+export function ShopStatusCard({
+  shopStatus = "inactive",
+  userId,
+  openCreateStallModal,
+  onStatusChange,
+}: ShopStatusCardProps) {
   const [isOpening, setIsOpening] = useState(false)
 
   const statusConfig = {
@@ -22,7 +56,7 @@ export function ShopStatusCard({ shopStatus = "inactive", userId }: ShopStatusCa
       color: "text-green-600",
       badge: "Active",
       badgeVariant: "default" as const,
-      message: "Your shop is live and accepting orders",
+      message: "Your shop is visible to buyers",
     },
     inactive: {
       icon: AlertCircle,
@@ -36,7 +70,7 @@ export function ShopStatusCard({ shopStatus = "inactive", userId }: ShopStatusCa
       color: "text-blue-600",
       badge: "Pending",
       badgeVariant: "secondary" as const,
-      message: "Your shop is under review",
+      message: "Your shop is under review and not visible to buyers",
     },
   }
 
@@ -53,28 +87,24 @@ export function ShopStatusCard({ shopStatus = "inactive", userId }: ShopStatusCa
           <div>
             <div className="flex items-center gap-2">
               <h3 className="text-lg font-bold text-foreground">Shop Status</h3>
-              <Badge variant={config.badgeVariant}>{config.badge}</Badge>
+              <ShopStatusDropdown
+                status={shopStatus}
+                onStatusChange={onStatusChange}
+              />
             </div>
             <p className="mt-2 text-sm text-muted-foreground">{config.message}</p>
           </div>
         </div>
       </div>
 
-          {shopStatus === "inactive" && (
       <div className="mt-6">
-        <CreateStallModal/>
+        <Button onClick={openCreateStallModal} className="w-full">
+          Create Stall
+        </Button>
         <p className="mt-3 text-xs text-muted-foreground">
-          Your shop will be visible to local buyers once opened. You can start listing products immediately.
+          You can create and manage multiple stalls.
         </p>
       </div>
-)}
-
-      {shopStatus === "active" && (
-        <div className="mt-4 space-y-2 rounded-lg bg-green-50 p-4">
-          <p className="text-sm font-medium text-green-900">Ready to start selling!</p>
-          <p className="text-xs text-green-700">Complete your stall profile and add products to boost visibility.</p>
-        </div>
-      )}
     </Card>
   )
 }

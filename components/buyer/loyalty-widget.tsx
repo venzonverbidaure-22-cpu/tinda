@@ -37,7 +37,7 @@ export function LoyaltyWidget() {
   const progressPercent = (mockLoyaltyPoints.points / nextThreshold) * 100
 
   return (
-    <Card className={`bg-gradient-to-r ${getTierColor(mockLoyaltyPoints.tier)} p-6 text-white`}>
+    <Card className={`bg-linear-to-r ${getTierColor(mockLoyaltyPoints.tier)} p-6 text-white`}>
       <div className="flex items-start justify-between">
         <div>
           <div className="flex items-center gap-2">

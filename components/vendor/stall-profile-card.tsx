@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select"
 import { useState, useEffect } from "react"
 import axios from "axios"
+import { CurrentUser } from "@/lib/utils"
 
 const BACKEND_URL = "http://localhost:3001";
 
@@ -26,27 +27,55 @@ interface Stall {
 export function StallProfileCard() {
   const [stalls, setStalls] = useState<Stall[]>([]);
   const [selectedStall, setSelectedStall] = useState<Stall | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchStalls = async () => {
       try {
-        const response = await axios.get(`${BACKEND_URL}/api/stalls/vendor/1`);
+        const currentUser = CurrentUser()
+        const token = localStorage.getItem("token") || sessionStorage.getItem("token")
+
+         if (!currentUser?.id || !token) {
+          console.error("User not authenticated");
+          setStalls([]);
+          return;
+        }
+
+         const response = await axios.get(`${BACKEND_URL}/api/stalls/vendor/${currentUser.id}`, {
+          headers: {
+            "Authorization": `Bearer ${token}`
+          }
+        });
+
+        console.log("Stalls response:", response.data);
+
         const sortedStalls = response.data.sort((a: Stall, b: Stall) => a.stall_name.localeCompare(b.stall_name));
         setStalls(sortedStalls);
 
+       
+        let stallToSelect: Stall | null = null;
+
+        // 1. Try to get from localStorage
         const savedStallId = localStorage.getItem("selectedStallId");
         if (savedStallId) {
-          const savedStall = sortedStalls.find((s: Stall) => s.stall_id === Number(savedStallId));
-          if (savedStall) {
-            setSelectedStall(savedStall);
-          } else if (sortedStalls.length > 0) {
-            setSelectedStall(sortedStalls[0]);
-          }
-        } else if (sortedStalls.length > 0) {
-          setSelectedStall(sortedStalls[0]);
+          stallToSelect = sortedStalls.find((s: Stall) => String(s.stall_id) === savedStallId) || null;
         }
-      } catch (error) {
+
+        // 2. If not found in localStorage, use the first stall
+        if (!stallToSelect && sortedStalls.length > 0) {
+          stallToSelect = sortedStalls[0];
+          // Save it to localStorage for next time
+          localStorage.setItem("selectedStallId", stallToSelect!.stall_id);
+        }
+
+        setSelectedStall(stallToSelect);
+
+      } catch (error: any) {
         console.error("Error fetching stalls:", error);
+        console.error("Error details:", error.response?.data);
+        setStalls([]);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -61,7 +90,7 @@ export function StallProfileCard() {
     }
   };
 
-  const completionPercentage = selectedStall ? 100 : 60
+
 
   return (
     <Card className="p-6">
@@ -91,8 +120,7 @@ export function StallProfileCard() {
         </div>
       </div>
 
-      <div className="mt-6 space-y-4">
-        {/* Current Profile Preview */}
+      <div className="space-y-4">
         <div className="rounded-lg border border-border bg-muted/30 p-4">
           <div className="flex items-start gap-4">
             <div className="rounded-lg bg-primary/10 w-20 h-20 flex items-center justify-center">
@@ -113,19 +141,7 @@ export function StallProfileCard() {
           </div>
         </div>
 
-        {/* Profile Completion */}
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-foreground">Profile Completion</span>
-            <span className="text-sm font-semibold text-primary">{completionPercentage}%</span>
-          </div>
-          <div className="h-2 w-full rounded-full bg-muted">
-            <div
-              className="h-full rounded-full bg-primary transition-all"
-              style={{ width: `${completionPercentage}%` }}
-            />
-          </div>
-        </div>
+
 
         {/* Missing Items */}
         {selectedStall && (!selectedStall.stall_name || !selectedStall.stall_description) && (
@@ -149,3 +165,5 @@ export function StallProfileCard() {
     </Card>
   )
 }
+
+

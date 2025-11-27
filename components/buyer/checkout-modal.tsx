@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -15,7 +14,7 @@ interface CheckoutModalProps {
 }
 
 export function CheckoutModal({ onClose, totalAmount }: CheckoutModalProps) {
-  const { clearCart } = useApp()
+  const { clearCart, cart } = useApp()
   const [formData, setFormData] = useState({
     address: "",
     paymentMethod: "cod",
@@ -26,15 +25,54 @@ export function CheckoutModal({ onClose, totalAmount }: CheckoutModalProps) {
     e.preventDefault()
     setIsSubmitting(true)
 
-    // Simulate order submission
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    try {
+      const token = localStorage.getItem("token") || sessionStorage.getItem("token")
+      
+      if (!token) {
+        throw new Error("No authentication token found")
+      }
 
-    clearCart()
-    setIsSubmitting(false)
-    onClose()
+      // CHANGE: Use the main checkout endpoint instead of /simple
+      const response = await fetch("http://localhost:3001/api/checkout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          delivery_address: formData.address,
+          payment_method: formData.paymentMethod
+        })
+      })
 
-    // Show success message (in real app, would use toast)
-    alert("Order placed successfully!")
+      // Check if response is OK before trying to parse JSON
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('Server response:', errorText)
+        throw new Error(`Checkout failed: ${response.status} ${response.statusText}`)
+      }
+
+      const result = await response.json()
+
+      // Clear frontend cart on success
+      clearCart()
+      
+      // CHANGE: Handle multiple orders response
+      if (result.orders && result.orders.length > 0) {
+        const orderIds = result.orders.map((order: any) => order.order_id).join(", ")
+        alert(`Order${result.orders.length > 1 ? 's' : ''} placed successfully! Order ID${result.orders.length > 1 ? 's' : ''}: ${orderIds}`)
+      } else {
+        alert("Order placed successfully!")
+      }
+      
+      onClose()
+
+    } catch (error) {
+      console.error("Checkout error:", error)
+      alert(error.message || "Failed to place order. Please try again.")
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -76,20 +114,40 @@ export function CheckoutModal({ onClose, totalAmount }: CheckoutModalProps) {
             </select>
           </div>
 
-          {/* Total */}
+          {/* Order Summary */}
           <div className="border-t border-border pt-4">
-            <div className="flex justify-between font-bold">
-              <span className="text-foreground">Total Amount</span>
-              <span className="text-lg text-primary">₱{totalAmount}</span>
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Subtotal</span>
+                <span className="text-foreground">₱{totalAmount.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Delivery Fee</span>
+                <span className="text-foreground">₱50.00</span>
+              </div>
+              <div className="flex justify-between font-bold border-t border-border pt-2">
+                <span className="text-foreground">Total Amount</span>
+                <span className="text-lg text-primary">₱{(totalAmount + 50).toFixed(2)}</span>
+              </div>
             </div>
           </div>
 
           {/* Actions */}
           <div className="flex gap-3 pt-4">
-            <Button variant="outline" onClick={onClose} className="flex-1 bg-transparent">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={onClose} 
+              className="flex-1 bg-transparent"
+              disabled={isSubmitting}
+            >
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting} className="flex-1">
+            <Button 
+              type="submit" 
+              disabled={isSubmitting || !formData.address} 
+              className="flex-1"
+            >
               {isSubmitting ? "Processing..." : "Place Order"}
             </Button>
           </div>
