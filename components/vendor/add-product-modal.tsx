@@ -8,8 +8,9 @@ import { Card } from "@/components/ui/card"
 import { X, Upload, Image as ImageIcon } from "lucide-react"
 import { triggerProductListingsRefresh } from "./product-listing"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { API_BASE_URL } from "@/lib/utils"
 
-const BACKEND_URL = "http://localhost:3001";
+const BACKEND_URL = API_BASE_URL
 
 interface Stall {
   stall_id: string;
@@ -167,7 +168,7 @@ export function AddProductModal({ onClose }: AddProductModalProps) {
 
       console.log("Sending FormData with image:", !!productImage);
 
-      const res = await fetch(`${BACKEND_URL}/api/products`, {
+      const res = await fetch(`${API_BASE_URL}/api/products`, {
         method: "POST",
         headers: { 
           "Authorization": `Bearer ${token}`

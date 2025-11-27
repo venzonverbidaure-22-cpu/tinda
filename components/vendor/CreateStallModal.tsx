@@ -14,7 +14,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
-import { CurrentUser } from "@/lib/utils"
+import { API_BASE_URL, CurrentUser } from "@/lib/utils"
 
 interface CreateStallModalProps {
   isOpen: boolean;
@@ -138,7 +138,7 @@ export function CreateStallModal({ isOpen, onClose }: CreateStallModalProps) {
         console.log(pair[0], pair[1]);
       }
 
-      const res = await axios.post("http://localhost:3001/api/stalls", formData, {
+      const res = await axios.post(`${API_BASE_URL}/api/stalls`, formData, {
         headers: { 
           "Content-Type": "multipart/form-data",
           "Authorization": `Bearer ${token}`

@@ -17,7 +17,7 @@ import axios from "axios"
 import { CreateStallModal } from "./CreateStallModal"
 import { ProductListings } from "./product-listing" 
 import { AddProductModal } from "./add-product-modal"
-import { CurrentUser } from "@/lib/utils"
+import { API_BASE_URL, CurrentUser } from "@/lib/utils"
 import { getVendorOrders, getVendorOrderStats } from "@/lib/services/orderService"
 import { getStallById, updateStallStatus, getStallsByVendor } from "@/lib/services/stallService"
 
@@ -73,7 +73,7 @@ export function EnhancedVendorDashboard() {
         try {
           // Fetch user data
           const token = localStorage.getItem('token') || sessionStorage.getItem('token')
-          const userResponse = await axios.get(`http://localhost:3001/api/users/me`, {
+          const userResponse = await axios.get(`${API_BASE_URL}/api/users/me`, {
             headers: { Authorization: `Bearer ${token}` }
           });
           setUserData(userResponse.data);

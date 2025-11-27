@@ -9,7 +9,7 @@ import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
 import axios from "axios"
 
-const BACKEND_URL = "http://localhost:3001";
+const BACKEND_URL = API_BASE_URL
 
 export default function VendorStorePage() {
   const [isEditing, setIsEditing] = useState(false)

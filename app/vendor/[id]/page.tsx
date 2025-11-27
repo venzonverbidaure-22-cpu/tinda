@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/card"
 import { Star, MapPin, Phone, ArrowLeft } from "lucide-react"
 import Link from "next/link"
 import { useParams } from "next/navigation"
+import { API_BASE_URL } from "@/lib/utils"
 
 export default function VendorPage() {
   const params = useParams()
@@ -57,7 +58,7 @@ export default function VendorPage() {
     if (!imagePath) return "/placeholder.svg";
     const cleanPath = imagePath.replace(/\\/g, '/');
     const filename = cleanPath.replace(/^uploads\//, '');
-    const finalUrl = `http://localhost:3001/uploads/${filename}`;
+    const finalUrl = `${API_BASE_URL}/uploads/${filename}`;
     console.log("Generated image URL:", finalUrl);
     return finalUrl;
   };

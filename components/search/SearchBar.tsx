@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
+import { API_BASE_URL, cn } from "@/lib/utils";
 import { SearchResult } from "@/lib/search";
 import Image from "next/image";
 
@@ -12,7 +12,7 @@ interface SearchBarProps {
   className?: string;
 }
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+const BACKEND_URL = API_BASE_URL
 
 export function SearchBar({ className }: SearchBarProps) {
   const [query, setQuery] = useState("");

@@ -11,8 +11,9 @@ import axios from "axios"
 import { useParams } from "next/navigation"
 
 import { useRouter } from "next/navigation"
+import { API_BASE_URL } from "@/lib/utils"
 
-const BACKEND_URL = "http://localhost:3001";
+const BACKEND_URL = API_BASE_URL
 
 export default function VendorStorePage() {
   const params = useParams();

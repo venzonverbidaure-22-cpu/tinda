@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Star, MapPin } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { API_BASE_URL } from "@/lib/utils"
 
 interface VendorCardProps {
   vendor: Vendor
@@ -28,7 +29,7 @@ export function VendorCard({ vendor }: VendorCardProps) {
     const filename = cleanPath.replace(/^uploads\//, '');
     
     // Create proper URL for static file serving
-    const finalUrl = `http://localhost:3001/uploads/${filename}`;
+    const finalUrl = `${API_BASE_URL}/uploads/${filename}`;
     
     console.log("Generated image URL:", finalUrl);
     return finalUrl;

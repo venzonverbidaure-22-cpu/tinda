@@ -1,6 +1,7 @@
 import axios from 'axios';
+import { API_BASE_URL } from '../utils';
 
-const API_URL = 'http://localhost:3001/api/stalls';
+const API_URL = API_BASE_URL
 
 export const getStallsByVendor = async (vendorId: number) => {
   try {

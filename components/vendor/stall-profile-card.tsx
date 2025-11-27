@@ -13,9 +13,9 @@ import {
 } from "@/components/ui/select"
 import { useState, useEffect } from "react"
 import axios from "axios"
-import { CurrentUser } from "@/lib/utils"
+import { API_BASE_URL, CurrentUser } from "@/lib/utils"
 
-const BACKEND_URL = "http://localhost:3001";
+const BACKEND_URL = API_BASE_URL
 
 interface Stall {
   stall_id: string;

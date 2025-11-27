@@ -7,6 +7,7 @@ import { LoyaltyWidget } from "./loyalty-widget"
 import { LocationSelector } from "@/components/location-selector"
 import Link from "next/link"
 import { useEffect, useState } from "react"
+import { API_BASE_URL } from "@/lib/utils"
 
 // Market data that matches what you used in CreateStallModal
 const ILOILO_MARKETS = [
@@ -28,7 +29,7 @@ export function BuyerDashboard() {
   useEffect(() => {
     const fetchVendors = async () => {
       try {
-        const response = await fetch("http://localhost:3001/api/stalls")
+        const response = await fetch(`${API_BASE_URL}/api/stalls`)
         const data = await response.json()
         setVendors(data)
         setFilteredVendors(data) // Initially show all vendors

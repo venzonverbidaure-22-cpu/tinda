@@ -53,7 +53,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     setIsLoading(true)
     try {
-      const res = await fetch("http://localhost:3001/api/cart", {
+      const res = await fetch(`${API_BASE_URL}/api/cart`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       if (!res.ok) return setCart([])
@@ -92,7 +92,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const { token } = JSON.parse(session)
       if (!token) return
 
-      fetch("http://localhost:3001/api/auth/profile", {
+      fetch(`${API_BASE_URL}/api/auth/profile`, {
         headers: { Authorization: `Bearer ${token}` },
       })
         .then((r) => (r.ok ? r.json() : Promise.reject()))
@@ -182,7 +182,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     })
 
     try {
-      const res = await fetch("http://localhost:3001/api/cart/items", {
+      const res = await fetch(`${API_BASE_URL}/api/cart/items`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
         body: JSON.stringify({ item_id: item.item_id, quantity: item.quantity }),
@@ -204,7 +204,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setCart((prev) => prev.filter((c) => c.item_id !== item_id))
 
     try {
-      const res = await fetch(`http://localhost:3001/api/cart/items/${found.line_item_id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/cart/items/${found.line_item_id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       })
@@ -225,7 +225,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setCart((prev) => prev.map((c) => (c.item_id === item_id ? { ...c, quantity } : c)))
 
     try {
-      const res = await fetch(`http://localhost:3001/api/cart/items/${found.line_item_id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/cart/items/${found.line_item_id}`, {
         method: "PUT",
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
         body: JSON.stringify({ quantity }),
@@ -242,7 +242,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (!token) return
     setCart([])
     try {
-      const res = await fetch("http://localhost:3001/api/cart/clear", {
+      const res = await fetch(`${API_BASE_URL}/api/cart/clear`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       })

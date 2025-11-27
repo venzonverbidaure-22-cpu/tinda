@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { useApp } from "@/lib/context"
 import { ShoppingCart, Check, X } from "lucide-react"
 import { useState } from "react"
+import { API_BASE_URL } from "@/lib/utils"
 
 interface ProductCardProps {
   product: Product
@@ -27,7 +28,7 @@ export function ProductCard({ product }: ProductCardProps) {
     const filename = cleanPath.replace(/^uploads\//, '');
     
     // Create proper URL for static file serving
-    const finalUrl = `http://localhost:3001/uploads/${filename}`;
+    const finalUrl = `${API_BASE_URL}/uploads/${filename}`;
     
     console.log("Generated product image URL:", finalUrl);
     return finalUrl;

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
+import { API_BASE_URL } from "@/lib/utils"
 
 // Define Product interface
 interface Product {
@@ -47,7 +48,7 @@ export function ProductListings() {
 
   const fetchProducts = async () => {
     try {
-      const res = await fetch("http://localhost:3001/api/products")
+      const res = await fetch(`${API_BASE_URL}/api/products`)
       if (!res.ok) throw new Error("Failed to fetch products")
       const data = await res.json()
       setProducts(data)
@@ -75,7 +76,7 @@ export function ProductListings() {
     if (!confirm("Are you sure you want to delete this product?")) return
     setDeleting(item_id)
     try {
-      const res = await fetch(`http://localhost:3001/api/products/${item_id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/products/${item_id}`, {
         method: "DELETE",
       })
       const data = await res.json()
@@ -107,7 +108,7 @@ export function ProductListings() {
   const saveEdits = async () => {
     if (!editingProduct) return
     try {
-      const res = await fetch(`http://localhost:3001/api/products/${editingProduct.item_id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/products/${editingProduct.item_id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(editForm),
