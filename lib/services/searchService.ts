@@ -170,6 +170,7 @@ export class SearchService {
             return [];
         }
     }
+  }
 
     async searchByCategory(category: string): Promise<SearchResult[]> {
         try {
@@ -205,6 +206,7 @@ export class SearchService {
             return [];
         }
     }
+  }
 
     clearCache() {
         this.cache.clear();
