@@ -31,9 +31,14 @@ export function AllOrders() {
 
   useEffect(() => {
     if (currentUser) {
-      getStallsByVendor(currentUser.id).then(setStalls)
+      getStallsByVendor(currentUser.id).then(stalls => {
+        setStalls(stalls)
+        if (stalls.length > 0 && !stall) {
+          setStall(stalls[0].stall_id.toString())
+        }
+      })
     }
-  }, [currentUser])
+  }, [currentUser, stall])
 
   useEffect(() => {
     const fetchOrders = async () => {

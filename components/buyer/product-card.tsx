@@ -15,6 +15,7 @@ export function ProductCard({ product }: ProductCardProps) {
   const { addToCart, cart } = useApp()
   const [quantity, setQuantity] = useState(1)
   const [isAdded, setIsAdded] = useState(false)
+  const [quantity, setQuantity] = useState(1)
 
   const productImageUrl = product.product_image
     ? `http://localhost:3001/uploads/${product.product_image.replace(/^uploads\//, "")}`
@@ -52,7 +53,9 @@ export function ProductCard({ product }: ProductCardProps) {
 
       <div className="p-4">
         <h3 className="font-bold text-foreground">{product.product_name}</h3>
-        <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{product.description}</p>
+        <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
+          {product.description}
+        </p>
 
         <div className="mt-3 flex items-center justify-between">
           <div>
