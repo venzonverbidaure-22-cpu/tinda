@@ -21,12 +21,12 @@ export default function VendorPage() {
       const fetchVendorAndProducts = async () => {
         try {
           // Fetch vendor data
-          const vendorResponse = await fetch(`/api/stalls/${id}`)
+          const vendorResponse = await fetch(`${API_BASE_URL}/api/stalls/${id}`)
           const vendorData = await vendorResponse.json()
           setVendor(vendorData)
 
           // Fetch products for the vendor
-          const productsResponse = await fetch(`/api/products?stall_id=${id}`)
+          const productsResponse = await fetch(`${API_BASE_URL}/api/products?stall_id=${id}`)
           const productsData = await productsResponse.json()
           setProducts(productsData)
         } catch (error) {

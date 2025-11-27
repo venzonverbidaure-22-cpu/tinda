@@ -6,7 +6,7 @@ const API_URL = API_BASE_URL
 export const getVendorOrders = async (params: any) => {
   try {
     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-    const response = await axios.get(`${API_URL}/vendor`, {
+    const response = await fetch(`${API_URL}/vendor`, {
       params,
       headers: { Authorization: `Bearer ${token}` }
     });

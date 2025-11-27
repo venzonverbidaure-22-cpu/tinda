@@ -8,6 +8,7 @@ import { useState, useEffect } from "react"
 import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
 import axios from "axios"
+import { API_BASE_URL } from "@/lib/utils"
 
 const BACKEND_URL = API_BASE_URL
 
