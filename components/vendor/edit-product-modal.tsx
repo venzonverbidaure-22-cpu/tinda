@@ -15,6 +15,7 @@ interface Product {
   item_stocks?: number
   category?: string
   item_description?: string
+  image_url?: string
 }
 
 interface EditProductModalProps {
@@ -32,8 +33,10 @@ export function EditProductModal({ product, onClose, onSave }: EditProductModalP
     price: undefined,
     item_stocks: undefined,
     category: "",
+    image_url: "",
     ...product,
   })
+
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
@@ -43,6 +46,7 @@ export function EditProductModal({ product, onClose, onSave }: EditProductModalP
       price: undefined,
       item_stocks: undefined,
       category: "",
+      image_url: "",
       ...product,
     })
   }, [product])
@@ -73,6 +77,7 @@ export function EditProductModal({ product, onClose, onSave }: EditProductModalP
         price: form.price ?? 0,
         item_stocks: form.item_stocks ?? 0,
         category: form.category || null,
+        image_url: form.image_url?.trim() || null,
       }
 
       const res = await fetch(`${BACKEND_URL}/api/products/${form.item_id}`, {
@@ -104,24 +109,31 @@ export function EditProductModal({ product, onClose, onSave }: EditProductModalP
         </DialogHeader>
 
         <div className="space-y-3">
+
+          {/* Product Name */}
           <div>
             <Label>Product Name</Label>
             <Input
               value={form.item_name || ""}
               onChange={(e) => handleChange("item_name", e.target.value)}
               placeholder="Product name"
+              className="mt-1"
             />
           </div>
 
+          {/* Description — textarea like AddProduct */}
           <div>
             <Label>Description</Label>
-            <Input
+            <textarea
               value={form.item_description || ""}
               onChange={(e) => handleChange("item_description", e.target.value)}
-              placeholder="Description"
+              placeholder="Describe your product..."
+              rows={3}
+              className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
             />
           </div>
 
+          {/* Price */}
           <div>
             <Label>Price (₱)</Label>
             <Input
@@ -131,9 +143,11 @@ export function EditProductModal({ product, onClose, onSave }: EditProductModalP
               value={form.price ?? ""}
               onChange={(e) => handleChange("price", e.target.value)}
               placeholder="0.00"
+              className="mt-1"
             />
           </div>
 
+          {/* Stock Quantity */}
           <div>
             <Label>Stock Quantity</Label>
             <Input
@@ -143,13 +157,15 @@ export function EditProductModal({ product, onClose, onSave }: EditProductModalP
               value={form.item_stocks ?? ""}
               onChange={(e) => handleChange("item_stocks", e.target.value)}
               placeholder="Stock quantity"
+              className="mt-1"
             />
           </div>
 
+          {/* Category */}
           <div>
             <Label>Category</Label>
             <select
-              className="w-full border border-input bg-background rounded-md p-2"
+              className="mt-1 w-full border border-input bg-background rounded-md p-2"
               value={form.category || ""}
               onChange={(e) => handleChange("category", e.target.value)}
             >
@@ -159,6 +175,18 @@ export function EditProductModal({ product, onClose, onSave }: EditProductModalP
               ))}
             </select>
           </div>
+
+          {/* Image URL (new) */}
+          <div>
+            <Label>Image URL (optional)</Label>
+            <Input
+              value={form.image_url || ""}
+              onChange={(e) => handleChange("image_url", e.target.value)}
+              placeholder="https://example.com/image.jpg"
+              className="mt-1"
+            />
+          </div>
+
         </div>
 
         <DialogFooter className="mt-4 flex justify-end gap-2">

@@ -2,7 +2,7 @@
 
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { User, Edit, CheckCircle } from "lucide-react"
+import { User, Edit, CheckCircle, ChevronsUpDown } from "lucide-react"
 import Link from "next/link"
 import {
   Select,
@@ -27,22 +27,21 @@ interface Stall {
 export function StallProfileCard() {
   const [stalls, setStalls] = useState<Stall[]>([]);
   const [selectedStall, setSelectedStall] = useState<Stall | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchStalls = async () => {
-      setIsLoading(true)
       try {
         const currentUser = CurrentUser()
         const token = localStorage.getItem("token") || sessionStorage.getItem("token")
 
-        if (!currentUser?.id || !token) {
+         if (!currentUser?.id || !token) {
           console.error("User not authenticated");
           setStalls([]);
           return;
         }
 
-        const response = await axios.get(`${BACKEND_URL}/api/stalls/vendor/${currentUser.id}`, {
+         const response = await axios.get(`${BACKEND_URL}/api/stalls/vendor/${currentUser.id}`, {
           headers: {
             "Authorization": `Bearer ${token}`
           }
@@ -53,6 +52,7 @@ export function StallProfileCard() {
         const sortedStalls = response.data.sort((a: Stall, b: Stall) => a.stall_name.localeCompare(b.stall_name));
         setStalls(sortedStalls);
 
+       
         let stallToSelect: Stall | null = null;
 
         // 1. Try to get from localStorage
@@ -65,7 +65,7 @@ export function StallProfileCard() {
         if (!stallToSelect && sortedStalls.length > 0) {
           stallToSelect = sortedStalls[0];
           // Save it to localStorage for next time
-          localStorage.setItem("selectedStallId", stallToSelect.stall_id);
+          localStorage.setItem("selectedStallId", stallToSelect!.stall_id);
         }
 
         setSelectedStall(stallToSelect);
@@ -90,7 +90,7 @@ export function StallProfileCard() {
     }
   };
 
-  const completionPercentage = selectedStall ? 100 : 60
+
 
   return (
     <Card className="p-6">
@@ -120,8 +120,7 @@ export function StallProfileCard() {
         </div>
       </div>
 
-      <div className="mt-6 space-y-4">
-        {/* Current Profile Preview */}
+      <div className="space-y-4">
         <div className="rounded-lg border border-border bg-muted/30 p-4">
           <div className="flex items-start gap-4">
             <div className="rounded-lg bg-primary/10 w-20 h-20 flex items-center justify-center">
@@ -142,19 +141,7 @@ export function StallProfileCard() {
           </div>
         </div>
 
-        {/* Profile Completion */}
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-foreground">Profile Completion</span>
-            <span className="text-sm font-semibold text-primary">{completionPercentage}%</span>
-          </div>
-          <div className="h-2 w-full rounded-full bg-muted">
-            <div
-              className="h-full rounded-full bg-primary transition-all"
-              style={{ width: `${completionPercentage}%` }}
-            />
-          </div>
-        </div>
+
 
         {/* Missing Items */}
         {selectedStall && (!selectedStall.stall_name || !selectedStall.stall_description) && (
@@ -175,10 +162,8 @@ export function StallProfileCard() {
           </Button>
         </Link>
       </div>
-
-      {isLoading && (
-        <div className="mt-4 text-sm text-muted-foreground">Loading stalls...</div>
-      )}
     </Card>
   )
 }
+
+

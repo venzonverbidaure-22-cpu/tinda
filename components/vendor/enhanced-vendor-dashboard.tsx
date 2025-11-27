@@ -10,13 +10,16 @@ import { SetupChecklist } from "./setup-checklist"
 import { VendorOrdersTable } from "./vendor-orders-table"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
 import { TrendingUp, ShoppingCart, Star } from "lucide-react"
+import Link from "next/link"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import axios from "axios"
 import { CreateStallModal } from "./CreateStallModal"
 import { ProductListings } from "./product-listing" 
 import { AddProductModal } from "./add-product-modal"
 import { CurrentUser } from "@/lib/utils"
+import { getVendorOrders, getVendorOrderStats } from "@/lib/services/orderService"
+import { getStallById, updateStallStatus, getStallsByVendor } from "@/lib/services/stallService"
 
 interface UserData {
   email: string,
@@ -34,47 +37,95 @@ const salesData = [
   { day: "Sat", sales: 2390 },
   { day: "Sun", sales: 3490 },
 ]
-// const currentUser = CurrentUser()
-// console.log(currentUser!.id)
-export function EnhancedVendorDashboard() {
-  // const { currentUser } = useApp()
-  // const [stallData, setStallData] = useState<UserData | null>(null);
-  const [userData, setUserData] = useState<UserData | null>(null);
 
+export function EnhancedVendorDashboard() {
+  const [userData, setUserData] = useState<UserData | null>(null);
+  const [recentOrders, setRecentOrders] = useState([]);
+  const [totalOrders, setTotalOrders] = useState(0);
+  const [weeklyOrders, setWeeklyOrders] = useState(0);
   const [isCreateStallModalOpen, setIsCreateStallModalOpen] = useState(false);
-  // const [userData, setUserData] = useState(null)
-//   useEffect(() => {
-//     const fetchStallData = async () => {
-//       try {
-//         const response = await axios.get(`http://localhost:3001/api/stalls/vendor/${currentUser?.id}`);
-//         setStallData(response.data);
-//       } catch (error) {
-//         console.error("Error fetching stall data:", error);
-//       }
-//     };
-//     fetchStallData()
-// }, []);
-// console.log('stall',setStallData)
-// console.log(stallData)
-// console.log("stalldata",stallData)
-useEffect (()  => {
-  const fetchUserData = async () => {
-    try {
-      const token = localStorage.getItem('token') || sessionStorage.getItem('token')
-      const response = await axios.get(`http://localhost:3001/api/users/me`, {
-        headers: {
-          Authorization: `Bearer ${token}`
+  const [shopStatus, setShopStatus] = useState<"active" | "inactive" | "pending">("pending");
+  const [selectedStallIdState, setSelectedStallIdState] = useState<string | null>(null);
+  const currentUser = useMemo(() => CurrentUser(), []);
+
+
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      if (currentUser) {
+        try {
+          // Fetch user data
+          const token = localStorage.getItem('token') || sessionStorage.getItem('token')
+          const userResponse = await axios.get(`http://localhost:3001/api/users/me`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          setUserData(userResponse.data);
+
+          // Fetch recent orders
+          const ordersResponse = await getVendorOrders({
+            sortBy: 'newest',
+            limit: '5',
+          });
+          setRecentOrders(ordersResponse.orders);
+
+          // Fetch stall status
+          const selectedStallId = localStorage.getItem("selectedStallId");
+          if (selectedStallId) {
+            setSelectedStallIdState(selectedStallId);
+            const stallData = await getStallById(Number(selectedStallId));
+            if (stallData && stallData.status) {
+              setShopStatus(stallData.status);
+            }
+          } else {
+            const vendorStalls = await getStallsByVendor(currentUser.user_id);
+            if (vendorStalls && vendorStalls.length > 0) {
+              const firstStallId = vendorStalls[0].stall_id;
+              localStorage.setItem("selectedStallId", firstStallId);
+              setSelectedStallIdState(String(firstStallId));
+              const stallData = await getStallById(firstStallId);
+              if (stallData && stallData.status) {
+                setShopStatus(stallData.status);
+              }
+            } else {
+              setShopStatus("inactive");
+            }
+          }
+
+        } catch (error) {
+          console.error("Error fetching initial dashboard data:", error);
         }
-      })
-      setUserData(response.data)
-      console.log(response.data, "what")
-    } catch (error) {
-      console.error("Error fethcing user data:", error)
+      }
     };
-  }
-  fetchUserData()
-}, []);
-// console.log('userdata',userData?.full_name)
+    fetchInitialData();
+  }, [currentUser]);
+
+  useEffect(() => {
+    const fetchOrderStats = async () => {
+      if (selectedStallIdState) {
+        try {
+          const stats = await getVendorOrderStats(Number(selectedStallIdState));
+          setTotalOrders(stats.totalOrders);
+          setWeeklyOrders(stats.weeklyOrders);
+        } catch (error) {
+          console.error("Error fetching order stats:", error);
+          setTotalOrders(0);
+          setWeeklyOrders(0);
+        }
+      }
+    };
+    fetchOrderStats();
+  }, [selectedStallIdState]); // Re-fetch when selectedStallId changes in local storage
+
+  const handleStatusChange = async (status: "active" | "inactive") => {
+    if (selectedStallIdState) {
+      try {
+        await updateStallStatus(Number(selectedStallIdState), status);
+        setShopStatus(status);
+      } catch (error) {
+        console.error("Error updating stall status:", error);
+      }
+    }
+  };
+
 
   return (
     <main className="min-h-screen bg-background">
@@ -104,7 +155,11 @@ useEffect (()  => {
           <TabsContent value="overview" className="space-y-6">
             <div className="grid gap-6 lg:grid-cols-3">
               {/* Shop Status - SCRUM-21 */}
-              <ShopStatusCard shopStatus="inactive" openCreateStallModal={() => setIsCreateStallModalOpen(true)} />
+              <ShopStatusCard 
+                shopStatus={shopStatus} 
+                openCreateStallModal={() => setIsCreateStallModalOpen(true)}
+                onStatusChange={handleStatusChange}
+              />
 
               {/* Virtual Stall Profile - SCRUM-9 */}
               <div className="lg:col-span-2">
@@ -132,8 +187,8 @@ useEffect (()  => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-muted-foreground">Total Orders</p>
-                    <p className="text-2xl font-bold text-foreground">245</p>
-                    <p className="mt-1 text-xs text-green-600">+8 this week</p>
+                    <p className="text-2xl font-bold text-foreground">{totalOrders}</p>
+                    <p className="mt-1 text-xs text-green-600">+{weeklyOrders} this week</p>
                   </div>
                   <ShoppingCart className="h-8 w-8 text-accent" />
                 </div>
@@ -155,8 +210,13 @@ useEffect (()  => {
 
             {/* Recent Orders */}
             <Card className="p-6">
-              <h2 className="mb-4 text-lg font-bold text-foreground">Recent Orders</h2>
-              <VendorOrdersTable />
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-bold text-foreground">Recent Orders</h2>
+                <Button asChild>
+                  <Link href="/vendor/orders">All Orders</Link>
+                </Button>
+              </div>
+              <VendorOrdersTable orders={recentOrders} />
             </Card>
           </TabsContent>
 
