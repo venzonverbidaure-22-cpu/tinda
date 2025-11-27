@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import {
@@ -27,7 +27,7 @@ export function AllOrders() {
   const [page, setPage] = useState(1)
   const [totalOrders, setTotalOrders] = useState(0)
 
-  const currentUser = CurrentUser()
+  const currentUser = useMemo(() => CurrentUser(), []);
 
   useEffect(() => {
     if (currentUser) {
