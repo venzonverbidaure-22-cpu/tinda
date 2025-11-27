@@ -16,6 +16,7 @@ export default function VendorPage() {
   const id = params.id
   const [vendor, setVendor] = useState<Vendor | null>(null)
   const [products, setProducts] = useState<Product[]>([])
+  
   useEffect(() => {
     if (id) {
       const fetchVendorAndProducts = async () => {
@@ -23,6 +24,7 @@ export default function VendorPage() {
           // Fetch vendor data
           const vendorResponse = await fetch(`${API_BASE_URL}/api/stalls/${id}`)
           const vendorData = await vendorResponse.json()
+          console.log("Vendor API response:", vendorData) // Debug log
           setVendor(vendorData)
 
           // Fetch products for the vendor
@@ -51,20 +53,38 @@ export default function VendorPage() {
     )
   }
 
-
-
-
   const getImageUrl = (imagePath: string | null | undefined) => {
-    if (!imagePath) return "/placeholder.svg";
-    const cleanPath = imagePath.replace(/\\/g, '/');
-    const filename = cleanPath.replace(/^uploads\//, '');
-    const finalUrl = `${API_BASE_URL}/uploads/${filename}`;
-    console.log("Generated image URL:", finalUrl);
-    return finalUrl;
-  };
+    if (!imagePath) {
+      console.log("No image path provided")
+      return "/placeholder.svg"
+    }
+    
+    console.log("Original image path:", imagePath)
+    
+    // If it's already a full URL (starts with http), return it directly
+    if (imagePath.startsWith('http')) {
+      console.log("Already a full URL, returning directly:", imagePath)
+      return imagePath
+    }
+    
+    // Only process local file paths (for backward compatibility)
+    const cleanPath = imagePath.replace(/\\/g, '/')
+    const filename = cleanPath.replace(/^uploads\//, '')
+    const finalUrl = `${API_BASE_URL}/uploads/${filename}`
+    
+    console.log("Cleaned path:", cleanPath)
+    console.log("Filename:", filename)
+    console.log("Final URL:", finalUrl)
+    
+    return finalUrl
+  }
 
-  const bannerUrl = getImageUrl(vendor.banner_photo);
-  const iconUrl = getImageUrl(vendor.stall_icon);
+  const bannerUrl = getImageUrl(vendor.banner_photo)
+  const iconUrl = getImageUrl(vendor.stall_icon)
+  
+  console.log('Banner URL:', bannerUrl)
+  console.log('Icon URL:', iconUrl)
+  console.log('API_BASE_URL:', API_BASE_URL)
 
   return (
     <main className="min-h-screen bg-background">
@@ -76,8 +96,17 @@ export default function VendorPage() {
           Back to Vendors
         </Link>
 
+        {/* Banner Image */}
         <div className="relative h-48 w-full overflow-hidden rounded-lg bg-muted">
-          <img src={bannerUrl} alt={vendor.stall_name} className="h-full w-full object-cover" />
+          <img 
+            src={bannerUrl} 
+            alt={vendor.stall_name} 
+            className="h-full w-full object-cover"
+            onError={(e) => {
+              console.error("Failed to load banner image:", bannerUrl)
+              e.currentTarget.src = "/placeholder.svg"
+            }}
+          />
         </div>
 
         {/* Vendor Info */}
@@ -89,6 +118,10 @@ export default function VendorPage() {
                 src={iconUrl}
                 alt={vendor.stall_name}
                 className="h-20 w-20 rounded-full border-4 border-primary"
+                onError={(e) => {
+                  console.error("Failed to load icon image:", iconUrl)
+                  e.currentTarget.src = "/placeholder.svg"
+                }}
               />
               <div className="flex-1">
                 <h1 className="text-3xl font-bold text-foreground">{vendor.stall_name}</h1>

@@ -17,25 +17,35 @@ export function ProductCard({ product }: ProductCardProps) {
   const [isAdded, setIsAdded] = useState(false)
   const [quantity, setQuantity] = useState(1)
 
-  // ✅ ADD THIS FUNCTION (same as VendorCard)
+  // ✅ FIXED: Proper image URL handling for Cloudinary URLs
   const getImageUrl = (imagePath: string | null | undefined) => {
-    if (!imagePath) return "/placeholder.svg";
+    if (!imagePath) {
+      console.log("No product image path provided")
+      return "/placeholder.svg"
+    }
     
-    // Convert backslashes to forward slashes (Windows to URL format)
-    const cleanPath = imagePath.replace(/\\/g, '/');
+    console.log("Original product image path:", imagePath)
     
-    // Remove 'uploads/' prefix if it exists
-    const filename = cleanPath.replace(/^uploads\//, '');
+    // If it's already a full URL (starts with http), return it directly
+    if (imagePath.startsWith('http')) {
+      console.log("Already a full URL, returning directly:", imagePath)
+      return imagePath
+    }
     
-    // Create proper URL for static file serving
-    const finalUrl = `${API_BASE_URL}/uploads/${filename}`;
+    // Only process local file paths (for backward compatibility)
+    const cleanPath = imagePath.replace(/\\/g, '/')
+    const filename = cleanPath.replace(/^uploads\//, '')
+    const finalUrl = `${API_BASE_URL}/uploads/${filename}`
     
-    console.log("Generated product image URL:", finalUrl);
-    return finalUrl;
-  };
+    console.log("Cleaned path:", cleanPath)
+    console.log("Filename:", filename)
+    console.log("Final URL:", finalUrl)
+    
+    return finalUrl
+  }
 
-  // ✅ USE THE FUNCTION HERE
-  const productImageUrl = getImageUrl(product.product_image);
+  // ✅ USE THE FIXED FUNCTION HERE
+  const productImageUrl = getImageUrl(product.product_image)
 
   // Correct ID (stall_items.item_id)
   const itemId = parseInt(product.product_id)
@@ -62,8 +72,8 @@ export function ProductCard({ product }: ProductCardProps) {
           alt={product.product_name} 
           className="h-full w-full object-cover"
           onError={(e) => {
-            console.log("Product image failed to load:", productImageUrl);
-            e.currentTarget.src = "/placeholder.svg";
+            console.log("Product image failed to load:", productImageUrl)
+            e.currentTarget.src = "/placeholder.svg"
           }}
         />
         {/* Out of stock overlay */}

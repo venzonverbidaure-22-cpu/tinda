@@ -9,7 +9,6 @@ import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
 import axios from "axios"
 import { useParams } from "next/navigation"
-
 import { useRouter } from "next/navigation"
 import { API_BASE_URL } from "@/lib/utils"
 
@@ -36,6 +35,33 @@ export default function VendorStorePage() {
     icon: "",
     banner: "",
   })
+
+  // ✅ ADD THIS FUNCTION: Proper image URL handling
+  const getImageUrl = (imagePath: string | null | undefined) => {
+    if (!imagePath) {
+      console.log("No image path provided")
+      return "/placeholder.svg"
+    }
+    
+    console.log("Original image path:", imagePath)
+    
+    // If it's already a full URL (starts with http), return it directly
+    if (imagePath.startsWith('http')) {
+      console.log("Already a full URL, returning directly:", imagePath)
+      return imagePath
+    }
+    
+    // Only process local file paths (for backward compatibility)
+    const cleanPath = imagePath.replace(/\\/g, '/')
+    const filename = cleanPath.replace(/^uploads\//, '')
+    const finalUrl = `${BACKEND_URL}/uploads/${filename}`
+    
+    console.log("Cleaned path:", cleanPath)
+    console.log("Filename:", filename)
+    console.log("Final URL:", finalUrl)
+    
+    return finalUrl
+  }
 
   const handleFileChange = (field: "icon_image" | "banner_image", file: File | null) => {
     if (file) {
@@ -99,6 +125,10 @@ export default function VendorStorePage() {
       alert("Error updating store data. Please try again.");
     }
   }
+
+  // ✅ USE THE FIXED FUNCTION FOR IMAGE URLS
+  const bannerUrl = storeData.banner_url ? getImageUrl(storeData.banner_url) : ""
+  const iconUrl = storeData.icon_url ? getImageUrl(storeData.icon_url) : ""
 
   return (
     <main className="min-h-screen bg-background">
@@ -202,11 +232,15 @@ export default function VendorStorePage() {
               {/* Icon Image */}
               <div>
                 <label className="text-sm font-medium text-foreground">Icon Image</label>
-                {(preview.icon || storeData.icon_url) && (
+                {(preview.icon || iconUrl) && (
                   <img
-                    src={preview.icon || `${BACKEND_URL}/${storeData.icon_url}`}
+                    src={preview.icon || iconUrl}
                     alt="Icon Preview"
                     className="mt-2 w-32 h-32 object-cover rounded-lg border"
+                    onError={(e) => {
+                      console.log("Icon image failed to load:", preview.icon || iconUrl)
+                      e.currentTarget.src = "/placeholder.svg"
+                    }}
                   />
                 )}
                 <Input
@@ -220,11 +254,15 @@ export default function VendorStorePage() {
               {/* Banner Image */}
               <div>
                 <label className="text-sm font-medium text-foreground">Banner Image</label>
-                {(preview.banner || storeData.banner_url) && (
+                {(preview.banner || bannerUrl) && (
                   <img
-                    src={preview.banner || `${BACKEND_URL}/${storeData.banner_url}`}
+                    src={preview.banner || bannerUrl}
                     alt="Banner Preview"
                     className="mt-2 w-full h-48 object-cover rounded-lg border"
+                    onError={(e) => {
+                      console.log("Banner image failed to load:", preview.banner || bannerUrl)
+                      e.currentTarget.src = "/placeholder.svg"
+                    }}
                   />
                 )}
                 <Input

@@ -18,30 +18,40 @@ export function VendorCard({ vendor }: VendorCardProps) {
   console.log("Banner photo:", vendor.banner_photo)
   console.log("Stall icon:", vendor.stall_icon)
 
-  // FIX: Convert image paths to proper URLs
+  // FIXED: Proper image URL handling for Cloudinary URLs
   const getImageUrl = (imagePath: string | null | undefined) => {
-    if (!imagePath) return "/placeholder.svg";
+    if (!imagePath) {
+      console.log("No image path provided")
+      return "/placeholder.svg"
+    }
     
-    // Convert backslashes to forward slashes (Windows to URL format)
-    const cleanPath = imagePath.replace(/\\/g, '/');
+    console.log("Original image path:", imagePath)
     
-    // Remove 'uploads/' prefix if it exists
-    const filename = cleanPath.replace(/^uploads\//, '');
+    // If it's already a full URL (starts with http), return it directly
+    if (imagePath.startsWith('http')) {
+      console.log("Already a full URL, returning directly:", imagePath)
+      return imagePath
+    }
     
-    // Create proper URL for static file serving
-    const finalUrl = `${API_BASE_URL}/uploads/${filename}`;
+    // Only process local file paths (for backward compatibility)
+    const cleanPath = imagePath.replace(/\\/g, '/')
+    const filename = cleanPath.replace(/^uploads\//, '')
+    const finalUrl = `${API_BASE_URL}/uploads/${filename}`
     
-    console.log("Generated image URL:", finalUrl);
-    return finalUrl;
-  };
+    console.log("Cleaned path:", cleanPath)
+    console.log("Filename:", filename)
+    console.log("Final URL:", finalUrl)
+    
+    return finalUrl
+  }
 
-  const bannerUrl = getImageUrl(vendor.banner_photo);
-  const iconUrl = getImageUrl(vendor.stall_icon);
+  const bannerUrl = getImageUrl(vendor.banner_photo)
+  const iconUrl = getImageUrl(vendor.stall_icon)
   console.log("Vendor data:", vendor)
   console.log("Vendor stall_id:", vendor.stall_id, "Type:", typeof vendor.stall_id)
 
   const handleRedirect = () => {
-    console.log("Redirecting to:", `/vendor/${vendor.stall_id}`);
+    console.log("Redirecting to:", `/vendor/${vendor.stall_id}`)
     router.push(`/vendor/${vendor.stall_id}`)
   }
 
@@ -54,8 +64,8 @@ export function VendorCard({ vendor }: VendorCardProps) {
           alt={vendor.stall_name} 
           className="h-full w-full object-cover"
           onError={(e) => {
-            console.log("Banner image failed to load:", bannerUrl);
-            e.currentTarget.src = "/placeholder.svg";
+            console.log("Banner image failed to load:", bannerUrl)
+            e.currentTarget.src = "/placeholder.svg"
           }}
         />
       </div>
@@ -69,8 +79,8 @@ export function VendorCard({ vendor }: VendorCardProps) {
             alt={vendor.stall_name}
             className="h-12 w-12 rounded-full border-2 border-primary object-cover"
             onError={(e) => {
-              console.log("Icon image failed to load:", iconUrl);
-              e.currentTarget.src = "/placeholder.svg";
+              console.log("Icon image failed to load:", iconUrl)
+              e.currentTarget.src = "/placeholder.svg"
             }}
           />
 

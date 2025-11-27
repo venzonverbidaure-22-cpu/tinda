@@ -52,4 +52,4 @@ export function CurrentUser() {
   }
 }
 
-export const API_BASE_URL = 'https://tindabackend-d1y8yqbcc-tindateam.vercel.app';
+export const API_BASE_URL = 'https://tindabackend-9etnjot5d-tindateam.vercel.app';
