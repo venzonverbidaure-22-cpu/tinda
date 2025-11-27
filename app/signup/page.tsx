@@ -76,7 +76,7 @@ export default function SignupPage() {
       if (loginRes.ok) {
         const { token, user } = loginData;
 
-       //saves token + user info
+        //saves token + user info
         localStorage.setItem("token", token);
         localStorage.setItem("user_id", user.id.toString());
         localStorage.setItem("user_role", user.role);
@@ -86,7 +86,7 @@ export default function SignupPage() {
         await login(email, password, role);
 
         if (role === "vendor") {
-          router.push("/vendor/enhanced-vendor-dashboard");
+          router.push("/");
         } else {
           router.push("/");
         }

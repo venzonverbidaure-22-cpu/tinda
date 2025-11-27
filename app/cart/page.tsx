@@ -9,7 +9,7 @@ import { Trash2, ArrowLeft } from "lucide-react"
 import Link from "next/link"
 import { useState } from "react"
 import { CheckoutModal } from "@/components/buyer/checkout-modal"
-import type { LineItem } from "@/lib/types" // Make sure to import LineItem
+import type { LineItem } from "@/lib/types"
 
 // ✅ TEMPORARY FIX: Add this interface
 interface CartItemWithStall extends LineItem {
@@ -24,10 +24,13 @@ export default function CartPage() {
   const { cart, removeFromCart, updateCartQuantity } = useApp()
   const [showCheckout, setShowCheckout] = useState(false)
 
-  const totalAmount = cart.reduce((sum, item) => {
+  const subtotal = cart.reduce((sum, item) => {
     const price = parseFloat(item.unit_price) || item.price || 0
     return sum + (price * item.quantity)
   }, 0)
+
+  const deliveryFee = 50
+  const totalAmount = subtotal + deliveryFee
 
   return (
     <main className="min-h-screen bg-background">
@@ -95,13 +98,14 @@ export default function CartPage() {
                             variant="outline"
                             size="sm"
                             onClick={() => updateCartQuantity(cartItem.item_id, cartItem.quantity - 1)}
+                            disabled={cartItem.quantity <= 1}
                           >
                             -
                           </Button>
                           <Input
                             type="number"
                             value={cartItem.quantity}
-                            onChange={(e) => updateCartQuantity(cartItem.item_id, Number.parseInt(e.target.value) || 1)}
+                            onChange={(e) => updateCartQuantity(cartItem.item_id, Math.max(1, Number.parseInt(e.target.value) || 1))}
                             className="w-12 text-center"
                             min="1"
                           />
@@ -128,20 +132,24 @@ export default function CartPage() {
                 <div className="mt-4 space-y-2 border-b border-border pb-4">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Subtotal</span>
-                    <span className="text-foreground">₱{totalAmount.toFixed(2)}</span>
+                    <span className="text-foreground">₱{subtotal.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Delivery</span>
-                    <span className="text-foreground">₱50</span>
+                    <span className="text-muted-foreground">Delivery Fee</span>
+                    <span className="text-foreground">₱{deliveryFee.toFixed(2)}</span>
                   </div>
                 </div>
 
                 <div className="mt-4 flex justify-between font-bold">
                   <span className="text-foreground">Total</span>
-                  <span className="text-lg text-primary">₱{(totalAmount + 50).toFixed(2)}</span>
+                  <span className="text-lg text-primary">₱{totalAmount.toFixed(2)}</span>
                 </div>
 
-                <Button className="mt-6 w-full" onClick={() => setShowCheckout(true)}>
+                <Button 
+                  className="mt-6 w-full" 
+                  onClick={() => setShowCheckout(true)}
+                  disabled={cart.length === 0}
+                >
                   Proceed to Checkout
                 </Button>
               </Card>
@@ -150,7 +158,12 @@ export default function CartPage() {
         )}
       </div>
 
-      {showCheckout && <CheckoutModal onClose={() => setShowCheckout(false)} totalAmount={totalAmount + 50} />}
+      {showCheckout && (
+        <CheckoutModal 
+          onClose={() => setShowCheckout(false)} 
+          totalAmount={totalAmount} // Now passing the correct total including delivery
+        />
+      )}
     </main>
   )
 }
