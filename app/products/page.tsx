@@ -1,35 +1,55 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useEffect } from "react"
 import { Navbar } from "@/components/navbar"
-import { mockProducts } from "@/lib/mock-data"
 import { ProductFilter } from "@/components/buyer/product-filter"
 import { ProductCard } from "@/components/buyer/product-card"
 import { Card } from "@/components/ui/card"
+import axios from "axios"
+import { useApp } from "@/lib/context" // ✅ use your App context
 
 export default function ProductsPage() {
+  const { currentUser } = useApp() // ✅ reactive currentUser
+
   const [filters, setFilters] = useState({
     search: "",
     category: "",
     priceRange: [0, 1000] as [number, number],
   })
+  const [products, setProducts] = useState<any[]>([])
+  const [loading, setLoading] = useState(false)
 
-  const filteredProducts = useMemo(() => {
-    return mockProducts.filter((product) => {
-      const matchesSearch = product.name.toLowerCase().includes(filters.search.toLowerCase())
-      const matchesCategory = !filters.category || product.category === filters.category
-      const matchesPrice = product.price >= filters.priceRange[0] && product.price <= filters.priceRange[1]
+  const fetchProducts = async () => {
+    setLoading(true)
+    try {
+      const params: any = {}
+      if (filters.category) params.category = filters.category
+      if (filters.search) params.search = filters.search
 
-      return matchesSearch && matchesCategory && matchesPrice
-    })
-  }, [filters])
+      const res = await axios.get(`http://localhost:3001/api/products`, {
+        params,
+        headers: currentUser?.token
+          ? { Authorization: `Bearer ${currentUser.token}` } // ✅ token from context
+          : undefined,
+      })
+
+      setProducts(res.data)
+    } catch (err) {
+      console.error("Error fetching products:", err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchProducts()
+  }, [filters, currentUser]) // ✅ re-fetch if filters or user changes
 
   return (
     <main className="min-h-screen bg-background">
       <Navbar />
 
       <div className="space-y-8 px-6 py-8">
-        {/* Header */}
         <div>
           <h1 className="text-3xl font-bold text-foreground">Browse Products</h1>
           <p className="text-muted-foreground">Discover fresh products from all vendors</p>
@@ -43,10 +63,14 @@ export default function ProductsPage() {
 
           {/* Products Grid */}
           <div className="lg:col-span-3">
-            {filteredProducts.length > 0 ? (
+            {loading ? (
+              <Card className="p-8 text-center">
+                <p className="text-muted-foreground">Loading products...</p>
+              </Card>
+            ) : products.length > 0 ? (
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {filteredProducts.map((product) => (
-                  <ProductCard key={product.id} product={product} />
+                {products.map((product) => (
+                  <ProductCard key={product.product_id} product={product} />
                 ))}
               </div>
             ) : (

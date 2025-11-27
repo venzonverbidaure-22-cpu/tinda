@@ -28,7 +28,7 @@ export function BuyerDashboard() {
   useEffect(() => {
     const fetchVendors = async () => {
       try {
-        const response = await fetch("/api/stalls")
+        const response = await fetch("http://localhost:3001/api/stalls")
         const data = await response.json()
         setVendors(data)
         setFilteredVendors(data) // Initially show all vendors

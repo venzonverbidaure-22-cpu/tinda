@@ -87,7 +87,7 @@ export function EnhancedVendorDashboard() {
               setShopStatus(stallData.status);
             }
           } else {
-            const vendorStalls = await getStallsByVendor(currentUser.user_id);
+            const vendorStalls = await getStallsByVendor(currentUser.id);
             if (vendorStalls && vendorStalls.length > 0) {
               const firstStallId = vendorStalls[0].stall_id;
               localStorage.setItem("selectedStallId", firstStallId);

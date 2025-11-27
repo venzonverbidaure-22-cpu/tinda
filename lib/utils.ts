@@ -25,7 +25,7 @@ export function CurrentUser() {
     
     // Extract user info - your token structure might be different
     const userInfo = {
-      id: payload.id, // Try direct id first
+      id: payload._id, // Try direct id first
       email: payload.email,
       role: payload.role
     };
