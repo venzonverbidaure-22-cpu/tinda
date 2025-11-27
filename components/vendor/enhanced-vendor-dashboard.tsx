@@ -45,6 +45,7 @@ export function EnhancedVendorDashboard() {
   const [weeklyOrders, setWeeklyOrders] = useState(0);
   const [isCreateStallModalOpen, setIsCreateStallModalOpen] = useState(false);
   const [shopStatus, setShopStatus] = useState<"active" | "inactive" | "pending">("pending");
+  const [selectedStallIdState, setSelectedStallIdState] = useState<string | null>(null);
   const currentUser = useMemo(() => CurrentUser(), []);
 
 
@@ -69,6 +70,7 @@ export function EnhancedVendorDashboard() {
           // Fetch stall status
           const selectedStallId = localStorage.getItem("selectedStallId");
           if (selectedStallId) {
+            setSelectedStallIdState(selectedStallId);
             const stallData = await getStallById(Number(selectedStallId));
             if (stallData && stallData.status) {
               setShopStatus(stallData.status);
@@ -78,6 +80,7 @@ export function EnhancedVendorDashboard() {
             if (vendorStalls && vendorStalls.length > 0) {
               const firstStallId = vendorStalls[0].stall_id;
               localStorage.setItem("selectedStallId", firstStallId);
+              setSelectedStallIdState(String(firstStallId));
               const stallData = await getStallById(firstStallId);
               if (stallData && stallData.status) {
                 setShopStatus(stallData.status);
@@ -97,10 +100,9 @@ export function EnhancedVendorDashboard() {
 
   useEffect(() => {
     const fetchOrderStats = async () => {
-      const selectedStallId = localStorage.getItem("selectedStallId");
-      if (selectedStallId) {
+      if (selectedStallIdState) {
         try {
-          const stats = await getVendorOrderStats(Number(selectedStallId));
+          const stats = await getVendorOrderStats(Number(selectedStallIdState));
           setTotalOrders(stats.totalOrders);
           setWeeklyOrders(stats.weeklyOrders);
         } catch (error) {
@@ -111,13 +113,12 @@ export function EnhancedVendorDashboard() {
       }
     };
     fetchOrderStats();
-  }, [localStorage.getItem("selectedStallId")]); // Re-fetch when selectedStallId changes in local storage
+  }, [selectedStallIdState]); // Re-fetch when selectedStallId changes in local storage
 
   const handleStatusChange = async (status: "active" | "inactive") => {
-    const selectedStallId = localStorage.getItem("selectedStallId");
-    if (selectedStallId) {
+    if (selectedStallIdState) {
       try {
-        await updateStallStatus(Number(selectedStallId), status);
+        await updateStallStatus(Number(selectedStallIdState), status);
         setShopStatus(status);
       } catch (error) {
         console.error("Error updating stall status:", error);
