@@ -39,16 +39,16 @@ const salesData = [
 ]
 
 export function EnhancedVendorDashboard() {
-  const [userData, setUserData] = useState<UserData | null>(null);
-  const [recentOrders, setRecentOrders] = useState([]);
-  const [totalOrders, setTotalOrders] = useState(0);
-  const [weeklyOrders, setWeeklyOrders] = useState(0);
-  const [isCreateStallModalOpen, setIsCreateStallModalOpen] = useState(false);
-  const [shopStatus, setShopStatus] = useState<"active" | "inactive" | "pending">("pending");
-  const [selectedStallIdState, setSelectedStallIdState] = useState<string | null>(null);
-  const currentUser = useMemo(() => CurrentUser(), []);
+  const [userData, setUserData] = useState<UserData | null>(null)
+  const [recentOrders, setRecentOrders] = useState([])
+  const [totalOrders, setTotalOrders] = useState(0)
+  const [weeklyOrders, setWeeklyOrders] = useState(0)
+  const [isCreateStallModalOpen, setIsCreateStallModalOpen] = useState(false)
+  const [shopStatus, setShopStatus] = useState<"active" | "inactive" | "pending">("pending")
+  const [selectedStallIdState, setSelectedStallIdState] = useState<string | null>(null)
+  const currentUser = useMemo(() => CurrentUser(), [])
 
-
+  // Fetch recent orders when stall changes
   useEffect(() => {
     const fetchRecentOrders = async () => {
       if (selectedStallIdState) {
@@ -57,87 +57,88 @@ export function EnhancedVendorDashboard() {
             sortBy: 'newest',
             limit: '5',
             stallId: selectedStallIdState,
-          });
-          setRecentOrders(ordersResponse.orders);
+          })
+          setRecentOrders(ordersResponse.orders)
         } catch (error) {
-          console.error("Error fetching recent orders:", error);
+          console.error("Error fetching recent orders:", error)
         }
       }
-    };
-    fetchRecentOrders();
-  }, [selectedStallIdState]);
+    }
+    fetchRecentOrders()
+  }, [selectedStallIdState])
 
+  // Fetch initial user and stall data
   useEffect(() => {
     const fetchInitialData = async () => {
-      if (currentUser) {
-        try {
-          // Fetch user data
-          
-          typeof window !== 'undefined' ? (localStorage.getItem('token') || sessionStorage.getItem('token')) : null;
+      if (!currentUser) return
+
+      try {
+        // Get token from storage
+        const token = typeof window !== 'undefined'
+          ? (localStorage.getItem('token') || sessionStorage.getItem('token'))
+          : null
+
+        if (token) {
           const userResponse = await axios.get(`${API_BASE_URL}/api/users/me`, {
             headers: { Authorization: `Bearer ${token}` }
-          });
-          setUserData(userResponse.data);
-
-          // Fetch stall status
-          const selectedStallId = localStorage.getItem("selectedStallId");
-          if (selectedStallId) {
-            setSelectedStallIdState(selectedStallId);
-            const stallData = await getStallById(Number(selectedStallId));
-            if (stallData && stallData.status) {
-              setShopStatus(stallData.status);
-            }
-          } else {
-            const vendorStalls = await getStallsByVendor(currentUser.id);
-            if (vendorStalls && vendorStalls.length > 0) {
-              const firstStallId = vendorStalls[0].stall_id;
-              localStorage.setItem("selectedStallId", firstStallId);
-              setSelectedStallIdState(String(firstStallId));
-              const stallData = await getStallById(firstStallId);
-              if (stallData && stallData.status) {
-                setShopStatus(stallData.status);
-              }
-            } else {
-              setShopStatus("inactive");
-            }
-          }
-
-        } catch (error) {
-          console.error("Error fetching initial dashboard data:", error);
+          })
+          setUserData(userResponse.data)
         }
-      }
-    };
-    fetchInitialData();
-  }, [currentUser]);
 
+        // Determine selected stall
+        const selectedStallId = localStorage.getItem("selectedStallId")
+        if (selectedStallId) {
+          setSelectedStallIdState(selectedStallId)
+          const stallData = await getStallById(Number(selectedStallId))
+          if (stallData && stallData.status) setShopStatus(stallData.status)
+        } else {
+          const vendorStalls = await getStallsByVendor(currentUser.id)
+          if (vendorStalls && vendorStalls.length > 0) {
+            const firstStallId = vendorStalls[0].stall_id
+            localStorage.setItem("selectedStallId", String(firstStallId))
+            setSelectedStallIdState(String(firstStallId))
+            const stallData = await getStallById(firstStallId)
+            if (stallData && stallData.status) setShopStatus(stallData.status)
+          } else {
+            setShopStatus("inactive")
+          }
+        }
+
+      } catch (error) {
+        console.error("Error fetching initial dashboard data:", error)
+      }
+    }
+    fetchInitialData()
+  }, [currentUser])
+
+  // Fetch order statistics
   useEffect(() => {
     const fetchOrderStats = async () => {
       if (selectedStallIdState) {
         try {
-          const stats = await getVendorOrderStats(Number(selectedStallIdState));
-          setTotalOrders(stats.totalOrders);
-          setWeeklyOrders(stats.weeklyOrders);
+          const stats = await getVendorOrderStats(Number(selectedStallIdState))
+          setTotalOrders(stats.totalOrders)
+          setWeeklyOrders(stats.weeklyOrders)
         } catch (error) {
-          console.error("Error fetching order stats:", error);
-          setTotalOrders(0);
-          setWeeklyOrders(0);
+          console.error("Error fetching order stats:", error)
+          setTotalOrders(0)
+          setWeeklyOrders(0)
         }
       }
-    };
-    fetchOrderStats();
-  }, [selectedStallIdState]); // Re-fetch when selectedStallId changes in local storage
+    }
+    fetchOrderStats()
+  }, [selectedStallIdState])
 
   const handleStatusChange = async (status: "active" | "inactive") => {
     if (selectedStallIdState) {
       try {
-        await updateStallStatus(Number(selectedStallIdState), status);
-        setShopStatus(status);
+        await updateStallStatus(Number(selectedStallIdState), status)
+        setShopStatus(status)
       } catch (error) {
-        console.error("Error updating stall status:", error);
+        console.error("Error updating stall status:", error)
       }
     }
-  };
-
+  }
 
   return (
     <main className="min-h-screen bg-background">
@@ -155,7 +156,7 @@ export function EnhancedVendorDashboard() {
           </div>
         </div>
 
-        {/* Tabs for Organization */}
+        {/* Tabs */}
         <Tabs defaultValue="overview" className="w-full">
           <TabsList>
             <TabsTrigger value="overview">Overview</TabsTrigger>
@@ -163,23 +164,19 @@ export function EnhancedVendorDashboard() {
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
           </TabsList>
 
-          {/* Overview Tab - Main Dashboard */}
+          {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-6">
             <div className="grid gap-6 lg:grid-cols-3">
-              {/* Shop Status - SCRUM-21 */}
               <ShopStatusCard 
                 shopStatus={shopStatus} 
                 openCreateStallModal={() => setIsCreateStallModalOpen(true)}
                 onStatusChange={handleStatusChange}
               />
-
-              {/* Virtual Stall Profile - SCRUM-9 */}
               <div className="lg:col-span-2">
                 <StallProfileCard/>
               </div>
             </div>
 
-            {/* Product Listings - SCRUM-22 */}
             <ProductManagementCard />
 
             {/* Quick Stats */}
@@ -205,6 +202,7 @@ export function EnhancedVendorDashboard() {
                   <ShoppingCart className="h-8 w-8 text-accent" />
                 </div>
               </Card>
+
               <Card className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
@@ -232,12 +230,12 @@ export function EnhancedVendorDashboard() {
             </Card>
           </TabsContent>
 
-          {/* Setup Tab - Onboarding */}
+          {/* Setup Tab */}
           <TabsContent value="setup" className="space-y-6">
             <SetupChecklist />
           </TabsContent>
 
-          {/* Analytics Tab - Sales Data */}
+          {/* Analytics Tab */}
           <TabsContent value="analytics" className="space-y-6">
             <Card className="p-6">
               <h2 className="mb-4 text-lg font-bold text-foreground">Weekly Sales</h2>
