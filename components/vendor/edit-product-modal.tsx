@@ -52,13 +52,29 @@ export function EditProductModal({ product, onClose, onSave }: EditProductModalP
     })
   }, [product])
 
+  // ✅ FIXED: Prevent negative values for price
+  const handlePriceChange = (value: string) => {
+    const num = parseFloat(value)
+    // Only allow positive numbers or empty
+    if (value === "" || (!isNaN(num) && num >= 0)) {
+      setForm((prev) => ({ ...prev, price: value === "" ? undefined : num }))
+    }
+  }
+
+  // ✅ FIXED: Prevent negative values for stock
+  const handleStockChange = (value: string) => {
+    const num = parseInt(value)
+    // Only allow positive numbers or empty
+    if (value === "" || (!isNaN(num) && num >= 0)) {
+      setForm((prev) => ({ ...prev, item_stocks: value === "" ? undefined : num }))
+    }
+  }
+
   const handleChange = (field: keyof Product, value: string | number) => {
     if (field === "price") {
-      const num = parseFloat(String(value))
-      setForm((prev) => ({ ...prev, price: isNaN(num) ? undefined : num }))
+      handlePriceChange(String(value))
     } else if (field === "item_stocks") {
-      const num = parseInt(String(value))
-      setForm((prev) => ({ ...prev, item_stocks: isNaN(num) ? undefined : num }))
+      handleStockChange(String(value))
     } else {
       setForm((prev) => ({ ...prev, [field]: value }))
     }
@@ -67,6 +83,17 @@ export function EditProductModal({ product, onClose, onSave }: EditProductModalP
   const handleSave = async () => {
     if (!form.item_id) {
       alert("Invalid product ID")
+      return
+    }
+
+    // ✅ FIXED: Final validation to prevent negative values
+    if (form.price !== undefined && form.price < 0) {
+      alert("Price cannot be negative")
+      return
+    }
+
+    if (form.item_stocks !== undefined && form.item_stocks < 0) {
+      alert("Stock cannot be negative")
       return
     }
 

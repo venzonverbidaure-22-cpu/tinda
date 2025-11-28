@@ -322,6 +322,7 @@ export function AddProductModal({ onClose }: AddProductModalProps) {
             <Input
               type="number"
               step="0.01"
+              min="1"
               placeholder="0.00"
               value={formData.price}
               onChange={(e) => setFormData({ ...formData, price: e.target.value })}
@@ -336,6 +337,7 @@ export function AddProductModal({ onClose }: AddProductModalProps) {
             <Input
               type="number"
               placeholder="0"
+              min="0"
               value={formData.stock}
               onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
               className="mt-2"
