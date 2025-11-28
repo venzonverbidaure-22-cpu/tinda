@@ -5,8 +5,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
+import { API_BASE_URL } from "@/lib/utils"
 
-const BACKEND_URL = "http://localhost:3001"
+const API_BASE_URL = 'https://tindabackend-6q7u4tkv1-tindateam.vercel.app';
 
 interface Product {
   item_id: number
@@ -80,7 +81,7 @@ export function EditProductModal({ product, onClose, onSave }: EditProductModalP
         image_url: form.image_url?.trim() || null,
       }
 
-      const res = await fetch(`${BACKEND_URL}/api/products/${form.item_id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/products/${form.item_id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),

@@ -9,7 +9,7 @@ import { triggerProductListingsRefresh } from "./product-refresh"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { API_BASE_URL } from "@/lib/utils"
 
-const BACKEND_URL = "http://localhost:3001"
+const API_BASE_URL = 'https://tindabackend-6q7u4tkv1-tindateam.vercel.app';
 
 interface Stall {
   stall_id: number
@@ -46,7 +46,7 @@ export function AddProductModal({ onClose }: AddProductModalProps) {
         const payload = JSON.parse(atob(token.split(".")[1]))
         const userId = payload.id
 
-        const res = await fetch(`${BACKEND_URL}/api/stalls/vendor/${userId}`, {
+        const res = await fetch(`${API_BASE_URL}/api/stalls/vendor/${userId}`, {
           headers: { Authorization: `Bearer ${token}` },
         })
         if (!res.ok) throw new Error("Failed to fetch stalls")
@@ -89,7 +89,7 @@ export function AddProductModal({ onClose }: AddProductModalProps) {
         image_url: formData.image_url.trim() || undefined,
       }
 
-      const res = await fetch(`${BACKEND_URL}/api/products`, {
+      const res = await fetch(`${API_BASE_URL}/api/products`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json", 
