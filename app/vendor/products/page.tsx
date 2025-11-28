@@ -5,52 +5,85 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { useState } from "react"
-import { Plus, Edit, Trash2, ArrowLeft, Search } from "lucide-react"
+import { useState, useEffect } from "react"
+import { Plus, Trash2, ArrowLeft, Search } from "lucide-react"
 import { AddProductModal } from "@/components/vendor/add-product-modal"
+import { EditProductModal } from "@/components/vendor/edit-product-modal"
 import Link from "next/link"
+import { setExternalRefresh } from "@/components/vendor/product-refresh"
 
-// Mock product data
-const mockProducts = [
-  {
-    id: "1",
-    name: "Fresh Tomatoes",
-    category: "Vegetables",
-    price: 45,
-    stock: 120,
-    status: "active" as const,
-    image: "/fresh-tomatoes.png",
-  },
-  {
-    id: "2",
-    name: "Organic Carrots",
-    category: "Vegetables",
-    price: 35,
-    stock: 5,
-    status: "active" as const,
-    image: "/organic-carrots.png",
-  },
-  {
-    id: "3",
-    name: "Fresh Mangoes",
-    category: "Fruits",
-    price: 120,
-    stock: 0,
-    status: "inactive" as const,
-    image: "/fresh-mangoes.jpg",
-  },
-]
+const BACKEND_URL = "http://localhost:3001";
+
+interface Product {
+  item_id: number
+  item_name: string
+  price: number
+  item_stocks: number
+  in_stock: boolean
+  image_url?: string
+  category?: string
+  item_description?: string
+}
 
 export default function VendorProductsPage() {
   const [showAddProduct, setShowAddProduct] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
-  const [products, setProducts] = useState(mockProducts)
+  const [products, setProducts] = useState<Product[]>([])
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null)
+  const [refreshKey, setRefreshKey] = useState(0)
+  const [deleting, setDeleting] = useState<number | null>(null)
 
-  const filteredProducts = products.filter((product) => product.name.toLowerCase().includes(searchTerm.toLowerCase()))
+  // ==== Fetch products from backend ====
+  const fetchProducts = async () => {
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/products`)
+      if (!res.ok) throw new Error("Failed to fetch products")
+      const data = await res.json()
+      // Map backend response safely
+      const mapped = data.map((p: any) => ({
+        item_id: p.item_id,
+        item_name: p.item_name || "",
+        price: p.price ?? 0,
+        item_stocks: p.item_stocks ?? 0,
+        in_stock: (p.item_stocks ?? 0) > 0,
+        image_url: p.image_url || undefined,
+        category: p.category || "",
+        item_description: p.item_description || "",
+      }))
+      setProducts(mapped)
+    } catch (err) {
+      console.error("Error fetching products:", err)
+    }
+  }
 
-  const handleDelete = (id: string) => {
-    if (confirm("Are you sure you want to delete this product?")) {
-      setProducts(products.filter((p) => p.id !== id))
+  useEffect(() => {
+    fetchProducts()
+  }, [refreshKey])
+
+  // === Set the external refresh so AddProductModal can trigger ===
+  useEffect(() => {
+    setExternalRefresh(() => setRefreshKey((prev) => prev + 1))
+  }, [])
+
+  const filteredProducts = products.filter((product) =>
+    product.item_name.toLowerCase().includes(searchTerm.toLowerCase())
+  )
+
+  // ==== DELETE PRODUCT ====
+  const handleDelete = async (item_id: number) => {
+    if (!confirm("Are you sure you want to delete this product?")) return
+    setDeleting(item_id)
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/products/${item_id}`, {
+        method: "DELETE",
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data?.error || "Failed to delete product")
+      setRefreshKey((prev) => prev + 1)
+    } catch (err) {
+      console.error("Error deleting product:", err)
+    } finally {
+      setDeleting(null)
     }
   }
 
@@ -68,7 +101,7 @@ export default function VendorProductsPage() {
           <div className="mt-4 flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-foreground">Product Listings</h1>
-              <p className="text-muted-foreground">Manage all your products (SCRUM-22)</p>
+              <p className="text-muted-foreground">Manage all your products</p>
             </div>
             <Button onClick={() => setShowAddProduct(true)}>
               <Plus className="mr-2 h-4 w-4" />
@@ -112,43 +145,50 @@ export default function VendorProductsPage() {
                 </thead>
                 <tbody>
                   {filteredProducts.map((product) => (
-                    <tr key={product.id} className="border-b border-border hover:bg-muted/50">
+                    <tr key={product.item_id} className="border-b border-border hover:bg-muted/50">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <img
-                            src={product.image || "/placeholder.svg"}
-                            alt={product.name}
+                            src={product.image_url || "/placeholder.svg"}
+                            alt={product.item_name}
                             className="h-10 w-10 rounded object-cover"
                           />
-                          <span className="font-medium text-foreground">{product.name}</span>
+                          <span className="font-medium text-foreground">{product.item_name}</span>
                         </div>
                       </td>
                       <td className="px-6 py-4 text-sm text-muted-foreground">{product.category}</td>
-                      <td className="px-6 py-4 font-medium text-foreground">₱{product.price}</td>
+                      <td className="px-6 py-4 font-medium text-foreground">₱{(+product.price).toFixed(2)}</td>
                       <td className="px-6 py-4">
                         <span
                           className={`text-sm font-medium ${
-                            product.stock === 0
+                            product.item_stocks === 0
                               ? "text-red-600"
-                              : product.stock < 10
+                              : product.item_stocks < 10
                                 ? "text-amber-600"
                                 : "text-green-600"
                           }`}
                         >
-                          {product.stock} {product.stock < 10 && product.stock > 0 && "⚠️"}
-                          {product.stock === 0 && "❌"}
+                          {product.item_stocks} {product.item_stocks < 10 && product.item_stocks > 0 && "⚠️"}
+                          {product.item_stocks === 0 && "❌"}
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        <Badge variant={product.status === "active" ? "default" : "secondary"}>{product.status}</Badge>
+                        <Badge variant={product.in_stock ? "default" : "secondary"}>
+                          {product.in_stock ? "active" : "inactive"}
+                        </Badge>
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
-                          <Button size="sm" variant="ghost">
-                            <Edit className="h-4 w-4" />
+                          <Button size="sm" variant="ghost" onClick={() => setEditingProduct(product)}>
+                            Edit
                           </Button>
-                          <Button size="sm" variant="ghost" onClick={() => handleDelete(product.id)}>
-                            <Trash2 className="h-4 w-4 text-red-600" />
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleDelete(product.item_id)}
+                            disabled={deleting === product.item_id}
+                          >
+                            {deleting === product.item_id ? "Deleting..." : <Trash2 className="h-4 w-4 text-red-600" />}
                           </Button>
                         </div>
                       </td>
@@ -162,6 +202,15 @@ export default function VendorProductsPage() {
       </div>
 
       {showAddProduct && <AddProductModal onClose={() => setShowAddProduct(false)} />}
+
+      {/* ==== EDIT PRODUCT MODAL ==== */}
+      {editingProduct && (
+        <EditProductModal
+          product={editingProduct}
+          onClose={() => setEditingProduct(null)}
+          onSave={() => setRefreshKey((prev) => prev + 1)}
+        />
+      )}
     </main>
   )
 }
