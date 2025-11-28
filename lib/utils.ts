@@ -10,7 +10,7 @@ export function cn(...inputs: ClassValue[]) {
 // lib/utils.ts
 export function CurrentUser() {
   try {
-    const token = localStorage.getItem("token");
+    const token = typeof window !== 'undefined' ? (localStorage.getItem('token') || sessionStorage.getItem('token')) : null;
     
     if (!token) {
       console.log("No token found in storage");

@@ -6,6 +6,7 @@ export interface User {
   id: string
   user_id: string
   full_name: string
+  name: string
   email: string
   role: UserRole
   created_at: string
@@ -52,6 +53,7 @@ export interface Location {
 export interface Vendor {
   stall_id: string
   stall_name: string
+  name: string
   vendor_name: string
   stall_description: string
   category: string
@@ -95,6 +97,8 @@ export interface Stall{
 }
 export interface Product {
   product_id: string
+  id: string
+  name: string
   item_id: number
   stall_id: string
   product_name: string
@@ -143,6 +147,7 @@ export interface ShoppingCart {
 
 export interface Order {
   order_id: string
+  id:string
   buyer_id: string
   vendor_id: string
   items: LineItem[]

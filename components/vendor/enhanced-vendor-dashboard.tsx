@@ -72,7 +72,8 @@ export function EnhancedVendorDashboard() {
       if (currentUser) {
         try {
           // Fetch user data
-          const token = localStorage.getItem('token') || sessionStorage.getItem('token')
+          
+          typeof window !== 'undefined' ? (localStorage.getItem('token') || sessionStorage.getItem('token')) : null;
           const userResponse = await axios.get(`${API_BASE_URL}/api/users/me`, {
             headers: { Authorization: `Bearer ${token}` }
           });

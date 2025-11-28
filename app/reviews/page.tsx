@@ -30,7 +30,7 @@ export default function ReviewsPage() {
             </Card>
           ) : (
             mockReviews.map((review) => {
-              const vendor = mockVendors.find((v) => v.id === review.vendorId)
+              const vendor = mockVendors.find((v) => v.id.toString() === review.vendorId)
               return (
                 <Card key={review.id} className="p-6">
                   <div className="flex items-start justify-between gap-4">

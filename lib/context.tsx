@@ -37,6 +37,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   // Token helper
   // ------------------------
   const getToken = () => {
+    if (typeof window === 'undefined') {
+      return null;
+    }
     try {
       return JSON.parse(localStorage.getItem("tinda_session") || "{}").token || null
     } catch {
@@ -69,7 +72,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }))
 
       setCart(adapted)
-      localStorage.setItem("tinda_cart", JSON.stringify(adapted)) // persist cart
+      if (typeof window !== 'undefined') {
+        localStorage.setItem("tinda_cart", JSON.stringify(adapted)) // persist cart
+      }
     } catch (e) {
       console.error("Fetch cart error:", e)
       setCart([])
@@ -121,8 +126,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   // ------------------------
   useEffect(() => {
     if (userRole === "buyer" && currentUser) {
-      const savedCart = localStorage.getItem("tinda_cart")
-      if (savedCart) setCart(JSON.parse(savedCart)) // show cached cart instantly
+      if (typeof window !== 'undefined') {
+        const savedCart = localStorage.getItem("tinda_cart")
+        if (savedCart) setCart(JSON.parse(savedCart)) // show cached cart instantly
+      }
       fetchCart() // sync with backend
     } else {
       setCart([])
@@ -145,7 +152,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setCurrentUser(data.user)
     setUserStatus("authenticated")
     setUserRole(data.user.role)
-    localStorage.setItem("tinda_session", JSON.stringify({ user: data.user, token: data.token }))
+    if (typeof window !== 'undefined') {
+      localStorage.setItem("tinda_session", JSON.stringify({ user: data.user, token: data.token }))
+    }
     if (data.user.role === "buyer") fetchCart()
   }
 
@@ -153,8 +162,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   // Logout
   // ------------------------
   const logout = () => {
-    localStorage.removeItem("tinda_session")
-    localStorage.removeItem("tinda_cart")
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem("tinda_session")
+      localStorage.removeItem("tinda_cart")
+    }
     setCurrentUser(null)
     setUserRole(null)
     setUserStatus("visitor")
@@ -163,7 +174,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const handleSetLocation = (loc: string) => {
     setSelectedLocation(loc)
-    localStorage.setItem("tinda_location", loc)
+    if (typeof window !== 'undefined') {
+      localStorage.setItem("tinda_location", loc)
+    }
   }
 
   // ------------------------

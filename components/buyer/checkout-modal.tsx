@@ -27,7 +27,7 @@ export function CheckoutModal({ onClose, totalAmount }: CheckoutModalProps) {
     setIsSubmitting(true)
 
     try {
-      const token = localStorage.getItem("token") || sessionStorage.getItem("token")
+      const token = typeof window !== 'undefined' ? (localStorage.getItem("token") || sessionStorage.getItem("token")) : null;
       
       if (!token) {
         throw new Error("No authentication token found")
@@ -70,7 +70,7 @@ export function CheckoutModal({ onClose, totalAmount }: CheckoutModalProps) {
 
     } catch (error) {
       console.error("Checkout error:", error)
-      alert(error.message || "Failed to place order. Please try again.")
+       alert(error instanceof Error ? error.message : "Failed to place order. Please try again.")
     } finally {
       setIsSubmitting(false)
     }
