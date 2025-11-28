@@ -36,7 +36,7 @@ export function ProductManagementCard({
           <div>
             <div className="flex items-center gap-2">
               <h3 className="text-lg font-bold text-foreground">Product Listings</h3>
-              <Badge variant="default">{stats.total}</Badge>
+              {/* <Badge variant="default">{stats.total}</Badge> */}
             </div>
             <p className="mt-1 text-sm text-muted-foreground">Display your items to potential buyers</p>
           </div>
@@ -46,24 +46,7 @@ export function ProductManagementCard({
           </Button>
         </div>
 
-        {/* Product Stats Grid */}
-        <div className="mt-6 grid gap-3 sm:grid-cols-3">
-          <div className="rounded-lg border border-border bg-muted/30 p-3">
-            <p className="text-xs text-muted-foreground">Active Products</p>
-            <p className="mt-1 text-2xl font-bold text-foreground">{stats.active}</p>
-          </div>
-          <div className="rounded-lg border border-border bg-muted/30 p-3">
-            <p className="text-xs text-muted-foreground">Inactive</p>
-            <p className="mt-1 text-2xl font-bold text-foreground">{stats.inactive}</p>
-          </div>
-          <div className="rounded-lg border border-border bg-muted/30 p-3">
-            <p className="text-xs text-muted-foreground">Low Stock</p>
-            <div className="mt-1 flex items-center gap-2">
-              <p className="text-2xl font-bold text-foreground">{stats.low_stock}</p>
-              {stats.low_stock > 0 && <Zap className="h-4 w-4 text-amber-600" />}
-            </div>
-          </div>
-        </div>
+
 
         {/* Quick Actions */}
         <div className="mt-6 flex flex-col gap-2 sm:flex-row">

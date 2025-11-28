@@ -101,7 +101,7 @@ export function BuyerDashboard() {
       </div>
 
       {/* Loyalty Widget */}
-      <LoyaltyWidget />
+      
 
       {/* Vendors Grid */}
       <div>

@@ -1,7 +1,7 @@
 "use client"
 
 import { Navbar } from "@/components/navbar"
-import { mockReviews, mockVendors } from "@/lib/mock-data"
+import * as mockData from "@/lib/mock-data"
 import { Card } from "@/components/ui/card"
 import { Star, ArrowLeft } from "lucide-react"
 import Link from "next/link"
@@ -24,13 +24,13 @@ export default function ReviewsPage() {
 
         {/* Reviews List */}
         <div className="space-y-4">
-          {mockReviews.length === 0 ? (
+          {mockData.mockReviews.length === 0 ? (
             <Card className="p-8 text-center">
               <p className="text-muted-foreground">No reviews yet. Complete an order to leave a review.</p>
             </Card>
           ) : (
-            mockReviews.map((review) => {
-              const vendor = mockVendors.find((v) => v.id.toString() === review.vendorId)
+            mockData.mockReviews.map((review) => {
+              const vendor = mockData.mockVendors.find((v) => v.id.toString() === review.vendorId)
               return (
                 <Card key={review.id} className="p-6">
                   <div className="flex items-start justify-between gap-4">

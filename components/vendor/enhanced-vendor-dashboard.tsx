@@ -160,8 +160,7 @@ export function EnhancedVendorDashboard() {
         <Tabs defaultValue="overview" className="w-full">
           <TabsList>
             <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="setup">Setup</TabsTrigger>
-            <TabsTrigger value="analytics">Analytics</TabsTrigger>
+            
           </TabsList>
 
           {/* Overview Tab */}
@@ -179,45 +178,7 @@ export function EnhancedVendorDashboard() {
 
             <ProductManagementCard />
 
-            {/* Quick Stats */}
-            <div className="grid gap-4 md:grid-cols-3">
-              <Card className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Total Sales</p>
-                    <p className="text-2xl font-bold text-foreground">₱52,000</p>
-                    <p className="mt-1 text-xs text-green-600">+12% from last month</p>
-                  </div>
-                  <TrendingUp className="h-8 w-8 text-primary" />
-                </div>
-              </Card>
-
-              <Card className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Total Orders</p>
-                    <p className="text-2xl font-bold text-foreground">{totalOrders}</p>
-                    <p className="mt-1 text-xs text-green-600">+{weeklyOrders} this week</p>
-                  </div>
-                  <ShoppingCart className="h-8 w-8 text-accent" />
-                </div>
-              </Card>
-
-              <Card className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Shop Rating</p>
-                    <div className="mt-1 flex items-center gap-1">
-                      <p className="text-2xl font-bold text-foreground">4.8</p>
-                      <span className="text-lg">⭐</span>
-                    </div>
-                    <p className="mt-1 text-xs text-muted-foreground">245 reviews</p>
-                  </div>
-                  <Star className="h-8 w-8 text-accent" />
-                </div>
-              </Card>
-            </div>
-
+        
             {/* Recent Orders */}
             <Card className="p-6">
               <div className="flex items-center justify-between mb-4">
