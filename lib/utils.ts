@@ -17,11 +17,11 @@ export function CurrentUser() {
       return null;
     }
 
-    console.log("Token found, decoding...");
+    // console.log("Token found, decoding...");
     
     // Decode JWT token
     const payload = JSON.parse(atob(token.split('.')[1]));
-    console.log("Full token payload:", payload);
+    // console.log("Full token payload:", payload);
     
     // Extract user info - your token structure might be different
     const userInfo = {
@@ -30,7 +30,7 @@ export function CurrentUser() {
       role: payload.role
     };
     
-    console.log("Extracted user info:", userInfo);
+    // console.log("Extracted user info:", userInfo);
     
     if (!userInfo.id) {
       console.log("No user ID found in token, checking localStorage...");
