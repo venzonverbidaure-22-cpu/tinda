@@ -36,7 +36,7 @@ export default function ReviewsPage() {
                   <div className="flex items-start justify-between gap-4">
                     {/* Review Info */}
                     <div className="flex-1">
-                      <h3 className="font-bold text-foreground">{vendor?.name}</h3>
+                      <h3 className="font-bold text-foreground">{vendor?.stall_name}</h3>
 
                       {/* Rating */}
                       <div className="mt-2 flex items-center gap-2">

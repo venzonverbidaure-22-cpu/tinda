@@ -58,12 +58,12 @@ export default function OrdersPage() {
         ) : (
           <div className="space-y-4">
             {mockOrders.map((order) => (
-              <Card key={order.id} className="p-6">
+              <Card key={order.order_id} className="p-6">
                 <div className="flex items-start justify-between gap-4">
                   {/* Order Info */}
                   <div className="flex-1">
                     <div className="flex items-center gap-3">
-                      <h3 className="font-bold text-foreground">Order #{order.id}</h3>
+                      <h3 className="font-bold text-foreground">Order #{order.order_id}</h3>
                       <Badge className={getStatusColor(order.status)}>{getStatusLabel(order.status)}</Badge>
                     </div>
 
@@ -84,7 +84,7 @@ export default function OrdersPage() {
                   </div>
 
                   {/* Action */}
-                  <Button variant="outline" onClick={() => setSelectedOrder(order.id)}>
+                  <Button variant="outline" onClick={() => setSelectedOrder(order.order_id)}>
                     View Details
                   </Button>
                 </div>

@@ -70,7 +70,11 @@ export function CheckoutModal({ onClose, totalAmount }: CheckoutModalProps) {
 
     } catch (error) {
       console.error("Checkout error:", error)
-      alert(error.message || "Failed to place order. Please try again.")
+      if (error instanceof Error) {
+        alert(error.message)
+      } else {
+        alert("Failed to place order. Please try again.")
+      }
     } finally {
       setIsSubmitting(false)
     }

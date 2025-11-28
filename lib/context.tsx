@@ -37,6 +37,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   // Token helper
   // ------------------------
   const getToken = () => {
+    if (typeof window === 'undefined') return null; // Guard localStorage access
     try {
       return JSON.parse(localStorage.getItem("tinda_session") || "{}").token || null
     } catch {
@@ -82,6 +83,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   // Load session on mount
   // ------------------------
   useEffect(() => {
+    if (typeof window === 'undefined') return; // Guard localStorage access
     const session = localStorage.getItem("tinda_session")
     const loc = localStorage.getItem("tinda_location")
 
@@ -178,7 +180,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const found = prev.find((i) => i.item_id === item.item_id)
       return found
         ? prev.map((i) => ({ ...i, quantity: i.quantity + item.quantity }))
-        : [...prev, { ...item, line_item_id: 0, unit_price: 0, stall: null, product: null }]
+        : [...prev, { ...item, line_item_id: 0, unit_price: "0", stall: undefined, product: undefined, productId: String(item.item_id), vendorId: "unknown-vendor", price: 0 }]
     })
 
     try {

@@ -50,10 +50,10 @@ export function ProductCard({ product }: ProductCardProps) {
   // Correct ID (stall_items.item_id)
   const itemId = parseInt(product.product_id)
   const isInCart = cart.some((item) => item.item_id === itemId)
-  const isOutOfStock = !product.in_stock || product.stock === 0
+  const isOutOfStock = product.stock === 0
 
   const handleAddToCart = () => {
-    if (product.in_stock) {
+    if (product.stock > 0) {
       addToCart({
         item_id: itemId,
         quantity: quantity   

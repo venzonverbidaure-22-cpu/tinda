@@ -13,7 +13,7 @@ interface OrderDetailModalProps {
 }
 
 export function OrderDetailModal({ orderId, onClose }: OrderDetailModalProps) {
-  const order = mockOrders.find((o) => o.id === orderId)
+  const order = mockOrders.find((o) => o.order_id === orderId)
   const [showReview, setShowReview] = useState(false)
 
   if (!order) return null
@@ -78,11 +78,11 @@ export function OrderDetailModal({ orderId, onClose }: OrderDetailModalProps) {
             <h3 className="font-semibold text-foreground">Items</h3>
             <div className="mt-3 space-y-2">
               {order.items.map((item) => {
-                const product = mockProducts.find((p) => p.id === item.productId)
+                const product = mockProducts.find((p) => p.product_id === item.productId)
                 return (
                   <div key={item.productId} className="flex justify-between text-sm">
                     <span className="text-muted-foreground">
-                      {product?.name} x {item.quantity}
+                      {product?.product_name} x {item.quantity}
                     </span>
                     <span className="font-medium text-foreground">₱{item.price * item.quantity}</span>
                   </div>
@@ -144,7 +144,7 @@ export function OrderDetailModal({ orderId, onClose }: OrderDetailModalProps) {
       </div>
 
       {showReview && (
-        <ReviewModal orderId={order.id} vendorName="Lola's Fresh Produce" onClose={() => setShowReview(false)} />
+        <ReviewModal orderId={order.order_id} vendorName="Lola's Fresh Produce" onClose={() => setShowReview(false)} />
       )}
     </>
   )

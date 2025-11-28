@@ -79,7 +79,7 @@ export function Navbar() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem disabled>
-                    <span className="text-sm font-medium">{currentUser?.name}</span>
+                    <span className="text-sm font-medium">{currentUser?.full_name}</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem>
                     <User className="mr-2 h-4 w-4" />

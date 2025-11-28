@@ -9,6 +9,7 @@ export function cn(...inputs: ClassValue[]) {
 // lib/utils.ts
 // lib/utils.ts
 export function CurrentUser() {
+  if (typeof window === 'undefined') return null; // Guard localStorage access
   try {
     const token = localStorage.getItem("token");
     
