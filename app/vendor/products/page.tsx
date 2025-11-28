@@ -11,8 +11,9 @@ import { AddProductModal } from "@/components/vendor/add-product-modal"
 import { EditProductModal } from "@/components/vendor/edit-product-modal"
 import Link from "next/link"
 import { setExternalRefresh } from "@/components/vendor/product-refresh"
+import { API_BASE_URL } from "@/lib/utils"
 
-const BACKEND_URL = "http://localhost:3001";
+const API_BASE_URL = 'https://tindabackend-6q7u4tkv1-tindateam.vercel.app';
 
 interface Product {
   item_id: number
@@ -36,7 +37,7 @@ export default function VendorProductsPage() {
   // ==== Fetch products from backend ====
   const fetchProducts = async () => {
     try {
-      const res = await fetch(`${BACKEND_URL}/api/products`)
+      const res = await fetch(`${API_BASE_URL }/api/products`)
       if (!res.ok) throw new Error("Failed to fetch products")
       const data = await res.json()
       // Map backend response safely
@@ -74,7 +75,7 @@ export default function VendorProductsPage() {
     if (!confirm("Are you sure you want to delete this product?")) return
     setDeleting(item_id)
     try {
-      const res = await fetch(`${BACKEND_URL}/api/products/${item_id}`, {
+      const res = await fetch(`${API_BASE_URL }/api/products/${item_id}`, {
         method: "DELETE",
       })
       const data = await res.json().catch(() => ({}))
