@@ -6,6 +6,7 @@ export interface User {
   id: string
   user_id: string
   full_name: string
+  name: string
   email: string
   role: UserRole
   created_at: string
@@ -48,12 +49,11 @@ export interface Location {
   name: string
   region: string
 }
-// Added this comment to force a re-evaluation of types
-
 
 export interface Vendor {
   stall_id: string
   stall_name: string
+  name: string
   vendor_name: string
   stall_description: string
   category: string
@@ -67,10 +67,9 @@ export interface Vendor {
   banner_photo:string
   rating: number
   vendor_contact: string
-  id: string
+  id: number
   full_name: string
   totalSales: number
-  revenue: number
   //? Original interface
   // id: string
   // name: string
@@ -98,6 +97,8 @@ export interface Stall{
 }
 export interface Product {
   product_id: string
+  id: string
+  name: string
   item_id: number
   stall_id: string
   product_name: string
@@ -113,8 +114,8 @@ export interface Product {
   // name: string
   // category: string
   
-  // in_stock: boolean // Removed redundant property
-  // image: string // Removed redundant property
+  in_stock: boolean
+  image: string
 }
 
 export interface Image {
@@ -146,6 +147,7 @@ export interface ShoppingCart {
 
 export interface Order {
   order_id: string
+  id:string
   buyer_id: string
   vendor_id: string
   items: LineItem[]

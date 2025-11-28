@@ -4,23 +4,21 @@ import { Navbar } from "@/components/navbar"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { useState, useEffect } from "react"
 import { Plus, Trash2, ArrowLeft, Search } from "lucide-react"
+import { useState, useEffect } from "react"
 import { AddProductModal } from "@/components/vendor/add-product-modal"
 import { EditProductModal } from "@/components/vendor/edit-product-modal"
 import Link from "next/link"
 import { setExternalRefresh } from "@/components/vendor/product-refresh"
 import { API_BASE_URL } from "@/lib/utils"
 
-
+const BACKEND_URL = API_BASE_URL
 
 interface Product {
   item_id: number
   item_name: string
   price: number
   item_stocks: number
-  in_stock: boolean
   image_url?: string
   category?: string
   item_description?: string
@@ -37,19 +35,18 @@ export default function VendorProductsPage() {
   // ==== Fetch products from backend ====
   const fetchProducts = async () => {
     try {
-      const res = await fetch(`${API_BASE_URL }/api/products`)
+      const stallId = 14 // Replace with actual logged-in vendor's stall ID
+      const res = await fetch(`${BACKEND_URL}/api/products?stall_id=${stallId}`)
       if (!res.ok) throw new Error("Failed to fetch products")
       const data = await res.json()
-      // Map backend response safely
       const mapped = data.map((p: any) => ({
-        item_id: p.item_id,
-        item_name: p.item_name || "",
-        price: p.price ?? 0,
-        item_stocks: p.item_stocks ?? 0,
-        in_stock: (p.item_stocks ?? 0) > 0,
-        image_url: p.image_url || undefined,
+        item_id: p.product_id,
+        item_name: p.product_name || "",
+        price: Number(p.price) || 0,
+        item_stocks: p.stock ?? 0, // <- fixed: use backend's stock field
+        image_url: p.product_image || undefined,
         category: p.category || "",
-        item_description: p.item_description || "",
+        item_description: p.description || "",
       }))
       setProducts(mapped)
     } catch (err) {
@@ -61,7 +58,6 @@ export default function VendorProductsPage() {
     fetchProducts()
   }, [refreshKey])
 
-  // === Set the external refresh so AddProductModal can trigger ===
   useEffect(() => {
     setExternalRefresh(() => setRefreshKey((prev) => prev + 1))
   }, [])
@@ -75,9 +71,9 @@ export default function VendorProductsPage() {
     if (!confirm("Are you sure you want to delete this product?")) return
     setDeleting(item_id)
     try {
-      const res = await fetch(`${API_BASE_URL }/api/products/${item_id}`, {
+      const res = await fetch(`${BACKEND_URL}/api/products/${item_id}, {
         method: "DELETE",
-      })
+      }`)
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data?.error || "Failed to delete product")
       setRefreshKey((prev) => prev + 1)
@@ -140,23 +136,13 @@ export default function VendorProductsPage() {
                     <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Category</th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Price</th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Stock</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Status</th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredProducts.map((product) => (
                     <tr key={product.item_id} className="border-b border-border hover:bg-muted/50">
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <img
-                            src={product.image_url || "/placeholder.svg"}
-                            alt={product.item_name}
-                            className="h-10 w-10 rounded object-cover"
-                          />
-                          <span className="font-medium text-foreground">{product.item_name}</span>
-                        </div>
-                      </td>
+                      <td className="px-6 py-4">{product.item_name}</td>
                       <td className="px-6 py-4 text-sm text-muted-foreground">{product.category}</td>
                       <td className="px-6 py-4 font-medium text-foreground">₱{(+product.price).toFixed(2)}</td>
                       <td className="px-6 py-4">
@@ -169,14 +155,8 @@ export default function VendorProductsPage() {
                                 : "text-green-600"
                           }`}
                         >
-                          {product.item_stocks} {product.item_stocks < 10 && product.item_stocks > 0 && "⚠️"}
-                          {product.item_stocks === 0 && "❌"}
+                          {product.item_stocks}
                         </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <Badge variant={product.in_stock ? "default" : "secondary"}>
-                          {product.in_stock ? "active" : "inactive"}
-                        </Badge>
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
@@ -204,7 +184,6 @@ export default function VendorProductsPage() {
 
       {showAddProduct && <AddProductModal onClose={() => setShowAddProduct(false)} />}
 
-      {/* ==== EDIT PRODUCT MODAL ==== */}
       {editingProduct && (
         <EditProductModal
           product={editingProduct}

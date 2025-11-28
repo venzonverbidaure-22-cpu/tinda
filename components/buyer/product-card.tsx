@@ -14,21 +14,50 @@ interface ProductCardProps {
 
 export function ProductCard({ product }: ProductCardProps) {
   const { addToCart, cart } = useApp()
-  const [quantity, setQuantity] = useState(1)
   const [isAdded, setIsAdded] = useState(false)
   const [quantity, setQuantity] = useState(1)
 
-  const productImageUrl = product.product_image
-    ? `http://localhost:3001/uploads/${product.product_image.replace(/^uploads\//, "")}`
-    : "/placeholder.svg"
+  // ✅ FIXED: Proper image URL handling for Cloudinary URLs
+  const getImageUrl = (imagePath: string | null | undefined) => {
+    if (!imagePath) {
+      console.log("No product image path provided")
+      return "/placeholder.svg"
+    }
+    
+    console.log("Original product image path:", imagePath)
+    
+    // If it's already a full URL (starts with http), return it directly
+    if (imagePath.startsWith('http')) {
+      console.log("Already a full URL, returning directly:", imagePath)
+      return imagePath
+    }
+    
+    // Only process local file paths (for backward compatibility)
+    const cleanPath = imagePath.replace(/\\/g, '/')
+    const filename = cleanPath.replace(/^uploads\//, '')
+    const finalUrl = `${API_BASE_URL}/uploads/${filename}`
+    
+    console.log("Cleaned path:", cleanPath)
+    console.log("Filename:", filename)
+    console.log("Final URL:", finalUrl)
+    
+    return finalUrl
+  }
 
+  // ✅ USE THE FIXED FUNCTION HERE
+  const productImageUrl = getImageUrl(product.product_image)
+
+  // Correct ID (stall_items.item_id)
   const itemId = parseInt(product.product_id)
   const isInCart = cart.some((item) => item.item_id === itemId)
-  const isOutOfStock = product.stock === 0
+  const isOutOfStock = !product.in_stock || product.stock === 0
 
   const handleAddToCart = () => {
-    if (!isOutOfStock) {
-      addToCart({ item_id: itemId, quantity })
+    if (product.in_stock) {
+      addToCart({
+        item_id: itemId,
+        quantity: quantity   
+      })
       setIsAdded(true)
       setTimeout(() => setIsAdded(false), 2000)
     }
@@ -37,12 +66,17 @@ export function ProductCard({ product }: ProductCardProps) {
   return (
     <Card className="overflow-hidden transition-all hover:shadow-lg">
       <div className="relative h-40 w-full bg-muted">
-        <img
-          src={productImageUrl}
-          alt={product.product_name}
+        {/* ✅ USE productImageUrl INSTEAD OF product.product_image */}
+        <img 
+          src={productImageUrl} 
+          alt={product.product_name} 
           className="h-full w-full object-cover"
-          onError={(e) => (e.currentTarget.src = "/placeholder.svg")}
+          onError={(e) => {
+            console.log("Product image failed to load:", productImageUrl)
+            e.currentTarget.src = "/placeholder.svg"
+          }}
         />
+        {/* Out of stock overlay */}
         {isOutOfStock && (
           <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
             <span className="bg-red-600 text-white px-3 py-1 rounded-md font-bold text-sm">
@@ -61,17 +95,34 @@ export function ProductCard({ product }: ProductCardProps) {
         <div className="mt-3 flex items-center justify-between">
           <div>
             <p className="text-lg font-bold text-primary">₱{product.price}</p>
-            <p className={`text-xs ${isOutOfStock ? "text-red-500" : "text-muted-foreground"}`}>
-              {isOutOfStock ? "Out of stock" : `${product.stock} in stock`}
+            <p className={`text-xs ${isOutOfStock ? 'text-red-500' : 'text-muted-foreground'}`}>
+              {isOutOfStock ? 'Out of stock' : `${product.stock} in stock`}
             </p>
           </div>
         </div>
 
+        {/* Quantity Selector - Only show if in stock */}
         {!isOutOfStock && (
           <div className="mt-3 flex items-center gap-2">
-            <Button size="sm" variant="outline" onClick={() => setQuantity(q => Math.max(1, q - 1))}>-</Button>
+            <Button 
+              size="sm" 
+              variant="outline"
+              onClick={() => setQuantity(q => Math.max(1, q - 1))}
+              disabled={isOutOfStock}
+            >
+              -
+            </Button>
+
             <span className="text-sm font-semibold w-6 text-center">{quantity}</span>
-            <Button size="sm" variant="outline" onClick={() => setQuantity(q => Math.min(product.stock, q + 1))}>+</Button>
+
+            <Button 
+              size="sm" 
+              variant="outline"
+              onClick={() => setQuantity(q => Math.min(product.stock, q + 1))}
+              disabled={isOutOfStock}
+            >
+              +
+            </Button>
           </div>
         )}
 
@@ -79,15 +130,24 @@ export function ProductCard({ product }: ProductCardProps) {
           className="mt-4 w-full"
           size="sm"
           onClick={handleAddToCart}
-          variant={isOutOfStock ? "secondary" : isInCart || isAdded ? "secondary" : "default"}
+          variant={isOutOfStock ? "secondary" : (isInCart || isAdded ? "secondary" : "default")}
           disabled={isOutOfStock}
         >
           {isOutOfStock ? (
-            <><X className="mr-2 h-4 w-4" />Unavailable</>
+            <>
+              <X className="mr-2 h-4 w-4" />
+              Unavailable
+            </>
           ) : isInCart || isAdded ? (
-            <><Check className="mr-2 h-4 w-4" />Added</>
+            <>
+              <Check className="mr-2 h-4 w-4" />
+              Added
+            </>
           ) : (
-            <><ShoppingCart className="mr-2 h-4 w-4" />Add to Cart</>
+            <>
+              <ShoppingCart className="mr-2 h-4 w-4" />
+              Add to Cart
+            </>
           )}
         </Button>
       </div>
