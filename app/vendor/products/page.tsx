@@ -9,8 +9,10 @@ import { useState, useEffect } from "react"
 import { AddProductModal } from "@/components/vendor/add-product-modal"
 import { EditProductModal } from "@/components/vendor/edit-product-modal"
 import Link from "next/link"
-import { setExternalRefresh } from "@/components/vendor/product-refresh"
-import { API_BASE_URL } from "@/lib/utils"
+import { API_BASE_URL} from "@/lib/utils"
+import { useApp } from "@/lib/context"
+import { getStallsByVendor } from "@/lib/services/stallService"
+
 
 const BACKEND_URL = API_BASE_URL
 
@@ -25,44 +27,90 @@ interface Product {
 }
 
 export default function VendorProductsPage() {
+  const { currentUser } = useApp() // Get current user from context
   const [showAddProduct, setShowAddProduct] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [products, setProducts] = useState<Product[]>([])
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
-  const [refreshKey, setRefreshKey] = useState(0)
   const [deleting, setDeleting] = useState<number | null>(null)
+  const [stallId, setStallId] = useState<number | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  // ==== Get vendor's stall ID ====
+  const fetchStallId = async () => {
+    try {
+      if (!currentUser) {
+        console.error("No user logged in")
+        return
+      }
+
+      // Use the current user's ID as vendorId
+      const vendorId = parseInt(currentUser.id)
+      console.log("Fetching stall for vendor ID:", vendorId)
+      
+      const stalls = await getStallsByVendor(vendorId)
+      console.log("Stalls response:", stalls)
+      
+      if (stalls && stalls.length > 0) {
+        setStallId(stalls[0].stall_id)
+        console.log("Set stall ID to:", stalls[0].stall_id)
+      } else {
+        console.error("No stalls found for this vendor")
+      }
+    } catch (error) {
+      console.error("Error fetching stall ID:", error)
+    }
+  }
 
   // ==== Fetch products from backend ====
   const fetchProducts = async () => {
-  try {
-    const stallId = 14 // Replace with actual logged-in vendor's stall ID
-    const res = await fetch(`${BACKEND_URL}/api/products?stall_id=${stallId}`)
-    if (!res.ok) throw new Error("Failed to fetch products")
-    const data = await res.json()
+    if (!stallId) {
+      console.log("No stall ID, skipping product fetch")
+      return
+    }
+    
+    try {
+      setLoading(true)
+      console.log("Fetching products for stall:", stallId)
+      
+      const res = await fetch(`${BACKEND_URL}/api/products?stall_id=${stallId}`)
+      if (!res.ok) throw new Error("Failed to fetch products")
+      
+      const data = await res.json()
+      console.log("Products API response:", data)
 
-    const mapped = data.map((p: any) => ({
-      item_id: p.item_id,
-      item_name: p.item_name || "",           // <- FIXED
-      price: Number(p.price) || 0,
-      item_stocks: p.item_stocks ?? 0,       // <- FIXED
-      image_url: p.image_url || undefined,   // <- FIXED
-      category: p.category || "",
-      item_description: p.item_description || "",
-    }))
+      const mapped = data.map((p: any) => ({
+        item_id: p.item_id,
+        item_name: p.item_name || "",
+        price: Number(p.price) || 0,
+        item_stocks: p.item_stocks ?? 0,
+        image_url: p.image_url || undefined,
+        category: p.category || "",
+        item_description: p.item_description || "",
+      }))
 
-    setProducts(mapped)
-  } catch (err) {
-    console.error("Error fetching products:", err)
+      console.log("Mapped products:", mapped)
+      setProducts(mapped)
+    } catch (err) {
+      console.error("Error fetching products:", err)
+    } finally {
+      setLoading(false)
+    }
   }
-  }
 
+  // Fetch stall ID when user is available
   useEffect(() => {
-    fetchProducts()
-  }, [refreshKey])
+    if (currentUser) {
+      fetchStallId()
+    }
+  }, [currentUser])
 
+  // Fetch products when stallId is available
   useEffect(() => {
-    setExternalRefresh(() => setRefreshKey((prev) => prev + 1))
-  }, [])
+    if (stallId) {
+      fetchProducts()
+    }
+  }, [stallId])
 
   const filteredProducts = products.filter((product) =>
     product.item_name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -78,12 +126,19 @@ export default function VendorProductsPage() {
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data?.error || "Failed to delete product")
-      setRefreshKey((prev) => prev + 1)
+      
+      // Refresh products after deletion
+      fetchProducts()
     } catch (err) {
       console.error("Error deleting product:", err)
     } finally {
       setDeleting(null)
     }
+  }
+
+  // Refresh products function that can be passed to modals
+  const refreshProducts = () => {
+    fetchProducts()
   }
 
   return (
@@ -101,8 +156,11 @@ export default function VendorProductsPage() {
             <div>
               <h1 className="text-3xl font-bold text-foreground">Product Listings</h1>
               <p className="text-muted-foreground">Manage all your products</p>
+              {stallId && (
+                <p className="text-sm text-muted-foreground">Stall ID: {stallId}</p>
+              )}
             </div>
-            <Button onClick={() => setShowAddProduct(true)}>
+            <Button onClick={() => setShowAddProduct(true)} disabled={!stallId}>
               <Plus className="mr-2 h-4 w-4" />
               New Product
             </Button>
@@ -122,7 +180,15 @@ export default function VendorProductsPage() {
 
         {/* Products Table */}
         <Card>
-          {filteredProducts.length === 0 ? (
+          {!stallId ? (
+            <div className="flex flex-col items-center justify-center py-12">
+              <p className="text-muted-foreground">Loading stall information...</p>
+            </div>
+          ) : loading ? (
+            <div className="flex flex-col items-center justify-center py-12">
+              <p className="text-muted-foreground">Loading products...</p>
+            </div>
+          ) : filteredProducts.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12">
               <p className="text-muted-foreground">No products found</p>
               <Button onClick={() => setShowAddProduct(true)} className="mt-4">
@@ -184,13 +250,18 @@ export default function VendorProductsPage() {
         </Card>
       </div>
 
-      {showAddProduct && <AddProductModal onClose={() => setShowAddProduct(false)} />}
+      {showAddProduct && stallId && (
+        <AddProductModal 
+          onClose={() => setShowAddProduct(false)} 
+          onProductAdded={refreshProducts} // Refresh products after adding
+        />
+      )}
 
       {editingProduct && (
         <EditProductModal
           product={editingProduct}
           onClose={() => setEditingProduct(null)}
-          onSave={() => setRefreshKey((prev) => prev + 1)}
+          onSave={refreshProducts} // Refresh products after editing
         />
       )}
     </main>

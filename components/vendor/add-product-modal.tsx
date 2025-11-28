@@ -21,6 +21,7 @@ interface Stall {
 
 interface AddProductModalProps {
   onClose: () => void
+  onProductAdded?: () => void
 }
 
 export function AddProductModal({ onClose }: AddProductModalProps) {
