@@ -9,8 +9,6 @@ import { triggerProductListingsRefresh } from "./product-refresh"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { API_BASE_URL } from "@/lib/utils"
 
-const API_BASE_URL = 'https://tindabackend-6q7u4tkv1-tindateam.vercel.app';
-
 interface Stall {
   stall_id: number
   stall_name: string

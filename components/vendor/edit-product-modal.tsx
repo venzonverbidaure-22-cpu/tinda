@@ -7,7 +7,6 @@ import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { API_BASE_URL } from "@/lib/utils"
 
-const API_BASE_URL = 'https://tindabackend-6q7u4tkv1-tindateam.vercel.app';
 
 interface Product {
   item_id: number
