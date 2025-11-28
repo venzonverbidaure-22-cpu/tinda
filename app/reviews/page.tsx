@@ -1,10 +1,10 @@
-"use client"
+"use client";
 
-import { Navbar } from "@/components/navbar"
-import { mockReviews, mockVendors } from "@/lib/mock-data"
-import { Card } from "@/components/ui/card"
-import { Star, ArrowLeft } from "lucide-react"
-import Link from "next/link"
+import { Navbar } from "@/components/navbar";
+import { mockReviews, mockVendors } from "@/lib/mock-data";
+import { Card } from "@/components/ui/card";
+import { Star, ArrowLeft } from "lucide-react";
+import Link from "next/link";
 
 export default function ReviewsPage() {
   return (
@@ -30,7 +30,7 @@ export default function ReviewsPage() {
             </Card>
           ) : (
             mockReviews.map((review) => {
-              const vendor = mockVendors.find((v) => v.id === review.vendorId)
+              const vendor = mockVendors.find((v) => v.id.toString() === review.vendorId);
               return (
                 <Card key={review.id} className="p-6">
                   <div className="flex items-start justify-between gap-4">
@@ -44,9 +44,8 @@ export default function ReviewsPage() {
                           {[1, 2, 3, 4, 5].map((star) => (
                             <Star
                               key={star}
-                              className={`h-4 w-4 ${
-                                star <= review.rating ? "fill-accent text-accent" : "text-muted-foreground"
-                              }`}
+                              className={`h-4 w-4 ${star <= review.rating ? "fill-accent text-accent" : "text-muted-foreground"
+                                }`}
                             />
                           ))}
                         </div>
@@ -61,11 +60,11 @@ export default function ReviewsPage() {
                     </div>
                   </div>
                 </Card>
-              )
+              );
             })
           )}
         </div>
       </div>
     </main>
-  )
+  );
 }
