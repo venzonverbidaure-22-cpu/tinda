@@ -96,6 +96,13 @@ export interface Stall{
   rating: null
 }
 export interface Product {
+  quantity: number
+  item_description: string
+  image_url: string
+  stock_quantity: number
+  item_stocks: number
+  item_image: string
+  product_description: string
   product_id: string
   id: string
   name: string

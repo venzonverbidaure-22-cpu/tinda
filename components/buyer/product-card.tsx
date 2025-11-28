@@ -17,14 +17,20 @@ export function ProductCard({ product }: ProductCardProps) {
   const [isAdded, setIsAdded] = useState(false)
   const [quantity, setQuantity] = useState(1)
 
-  // ✅ FIXED: Proper image URL handling for Cloudinary URLs
+  // Debug: Log the entire product object to see its structure
+  console.log("Full product object for debugging:", product)
+
+  // ✅ FIXED: Match the actual API response structure
   const getImageUrl = (imagePath: string | null | undefined) => {
-    if (!imagePath) {
-      console.log("No product image path provided")
+    console.log("Product image data:", {
+      rawImagePath: imagePath,
+      itemId: product.item_id
+    })
+    
+    if (!imagePath || imagePath === 'null' || imagePath === 'undefined' || imagePath === '') {
+      console.log("No valid product image path provided")
       return "/placeholder.svg"
     }
-    
-    console.log("Original product image path:", imagePath)
     
     // If it's already a full URL (starts with http), return it directly
     if (imagePath.startsWith('http')) {
@@ -32,47 +38,79 @@ export function ProductCard({ product }: ProductCardProps) {
       return imagePath
     }
     
-    // Only process local file paths (for backward compatibility)
+    // Handle local file paths
     const cleanPath = imagePath.replace(/\\/g, '/')
     const filename = cleanPath.replace(/^uploads\//, '')
     const finalUrl = `${API_BASE_URL}/uploads/${filename}`
     
-    console.log("Cleaned path:", cleanPath)
-    console.log("Filename:", filename)
-    console.log("Final URL:", finalUrl)
+    console.log("Processed image URL:", finalUrl)
     
     return finalUrl
   }
 
-  // ✅ USE THE FIXED FUNCTION HERE
-  const productImageUrl = getImageUrl(product.product_image)
+  // ✅ FIXED: Use the correct properties from your ACTUAL API response
+  const productImageUrl = getImageUrl(
+    product.image_url || // This is the actual property from your API
+    product.product_image || 
+    product.item_image || 
+    product.image || 
+    null
+  )
 
-  // Correct ID (stall_items.item_id)
-  const itemId = parseInt(product.product_id)
+  // ✅ FIXED: Get product name with correct property names
+  const productName = 
+    product.item_name || // This is the actual property from your API
+    product.product_name || 
+    product.name || 
+    "Unnamed Product"
+
+  // ✅ FIXED: Get description with correct property names
+  const productDescription = 
+    product.item_description || // This is the actual property from your API
+    product.description || 
+    product.product_description || 
+    ""
+
+  // ✅ FIXED: Get stock with correct property names
+  const stockQuantity = 
+    product.item_stocks || // This is the actual property from your API
+    product.stock || 
+    product.stock_quantity || 
+    product.quantity || 
+    0
+
+  // ✅ FIXED: Proper out of stock detection
+  const isOutOfStock = product.in_stock === false || stockQuantity <= 0
+
+  // ✅ FIXED: Get correct ID - using item_id from your API response
+  const itemId = product.item_id || parseInt(product.product_id || product.id || "0")
+
   const isInCart = cart.some((item) => item.item_id === itemId)
-  const isOutOfStock = !product.in_stock || product.stock === 0
 
   const handleAddToCart = () => {
-    if (product.in_stock) {
+    if (!isOutOfStock) {
       addToCart({
         item_id: itemId,
-        quantity: quantity   
+        quantity: quantity,
       })
       setIsAdded(true)
       setTimeout(() => setIsAdded(false), 2000)
     }
   }
 
+  // Convert price to number for display
+  const displayPrice = parseFloat(product.price?.toString() || "0")
+
   return (
     <Card className="overflow-hidden transition-all hover:shadow-lg">
       <div className="relative h-40 w-full bg-muted">
-        {/* ✅ USE productImageUrl INSTEAD OF product.product_image */}
+        {/* ✅ FIXED: Use the processed image URL */}
         <img 
           src={productImageUrl} 
-          alt={product.product_name} 
+          alt={productName} 
           className="h-full w-full object-cover"
           onError={(e) => {
-            console.log("Product image failed to load:", productImageUrl)
+            console.log("Product image failed to load, falling back to placeholder:", productImageUrl)
             e.currentTarget.src = "/placeholder.svg"
           }}
         />
@@ -87,16 +125,23 @@ export function ProductCard({ product }: ProductCardProps) {
       </div>
 
       <div className="p-4">
-        <h3 className="font-bold text-foreground">{product.product_name}</h3>
+        {/* ✅ FIXED: Use the processed product name */}
+        <h3 className="font-bold text-foreground">{productName}</h3>
+        
+        {/* ✅ FIXED: Use the processed description */}
         <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
-          {product.description}
+          {productDescription || "No description available"}
         </p>
 
         <div className="mt-3 flex items-center justify-between">
           <div>
-            <p className="text-lg font-bold text-primary">₱{product.price}</p>
+            <p className="text-lg font-bold text-primary">
+              ₱{displayPrice.toFixed(2)}
+            </p>
+            
+            {/* ✅ FIXED: Proper stock display */}
             <p className={`text-xs ${isOutOfStock ? 'text-red-500' : 'text-muted-foreground'}`}>
-              {isOutOfStock ? 'Out of stock' : `${product.stock} in stock`}
+              {isOutOfStock ? 'Out of stock' : `${stockQuantity} in stock`}
             </p>
           </div>
         </div>
@@ -118,7 +163,7 @@ export function ProductCard({ product }: ProductCardProps) {
             <Button 
               size="sm" 
               variant="outline"
-              onClick={() => setQuantity(q => Math.min(product.stock, q + 1))}
+              onClick={() => setQuantity(q => Math.min(stockQuantity, q + 1))}
               disabled={isOutOfStock}
             >
               +

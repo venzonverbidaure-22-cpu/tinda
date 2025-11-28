@@ -34,24 +34,26 @@ export default function VendorProductsPage() {
 
   // ==== Fetch products from backend ====
   const fetchProducts = async () => {
-    try {
-      const stallId = 14 // Replace with actual logged-in vendor's stall ID
-      const res = await fetch(`${BACKEND_URL}/api/products?stall_id=${stallId}`)
-      if (!res.ok) throw new Error("Failed to fetch products")
-      const data = await res.json()
-      const mapped = data.map((p: any) => ({
-        item_id: p.product_id,
-        item_name: p.product_name || "",
-        price: Number(p.price) || 0,
-        item_stocks: p.stock ?? 0, // <- fixed: use backend's stock field
-        image_url: p.product_image || undefined,
-        category: p.category || "",
-        item_description: p.description || "",
-      }))
-      setProducts(mapped)
-    } catch (err) {
-      console.error("Error fetching products:", err)
-    }
+  try {
+    const stallId = 14 // Replace with actual logged-in vendor's stall ID
+    const res = await fetch(`${BACKEND_URL}/api/products?stall_id=${stallId}`)
+    if (!res.ok) throw new Error("Failed to fetch products")
+    const data = await res.json()
+
+    const mapped = data.map((p: any) => ({
+      item_id: p.item_id,
+      item_name: p.item_name || "",           // <- FIXED
+      price: Number(p.price) || 0,
+      item_stocks: p.item_stocks ?? 0,       // <- FIXED
+      image_url: p.image_url || undefined,   // <- FIXED
+      category: p.category || "",
+      item_description: p.item_description || "",
+    }))
+
+    setProducts(mapped)
+  } catch (err) {
+    console.error("Error fetching products:", err)
+  }
   }
 
   useEffect(() => {
