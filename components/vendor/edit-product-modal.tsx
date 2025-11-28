@@ -52,16 +52,19 @@ export function EditProductModal({ product, onClose, onSave }: EditProductModalP
   }, [product])
 
   const handleChange = (field: keyof Product, value: string | number) => {
-    if (field === "price") {
-      const num = parseFloat(String(value))
-      setForm((prev) => ({ ...prev, price: isNaN(num) ? undefined : num }))
-    } else if (field === "item_stocks") {
-      const num = parseInt(String(value))
-      setForm((prev) => ({ ...prev, item_stocks: isNaN(num) ? undefined : num }))
-    } else {
-      setForm((prev) => ({ ...prev, [field]: value }))
-    }
+  if (field === "price") {
+    let num = parseFloat(String(value))
+    if (isNaN(num) || num < 0) num = 0   // prevent negative price
+    setForm((prev) => ({ ...prev, price: num }))
+  } else if (field === "item_stocks") {
+    let num = parseInt(String(value))
+    if (isNaN(num) || num < 0) num = 0   // prevent negative stock
+    setForm((prev) => ({ ...prev, item_stocks: num }))
+  } else {
+    setForm((prev) => ({ ...prev, [field]: value }))
   }
+}
+
 
   const handleSave = async () => {
     if (!form.item_id) {
