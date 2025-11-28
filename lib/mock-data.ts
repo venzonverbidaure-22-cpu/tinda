@@ -17,16 +17,7 @@ export const mockUsers = {
   },
 }
 
-export const mockLocations: Location[] = [
-  { id: "loc-1", name: "Quiapo", region: "Manila" },
-  { id: "loc-2", name: "Divisoria", region: "Manila" },
-  { id: "loc-3", name: "Binondo", region: "Manila" },
-  { id: "loc-4", name: "Salcedo", region: "Makati" },
-  { id: "loc-5", name: "Greenbelt", region: "Makati" },
-  { id: "loc-6", name: "Alabang", region: "Muntinlupa" },
-  { id: "loc-7", name: "Paseo de Santa Rosa", region: "Laguna" },
-  { id: "loc-8", name: "Robinsons Cavite", region: "Cavite" },
-]
+export const mockLocations: Location[] = []
 
 export const mockVendors: Vendor[] = [
   {
@@ -180,38 +171,12 @@ export const mockProducts: Product[] = [
   },
 ]
 
-export const mockOrders: Order[] = [
-  {
-    order_id: "order-1",
-    buyer_id: "buyer-1",
-    vendor_id: "vendor-1",
-    items: [
-      { line_item_id: 1, item_id: 1, productId: "prod-1", vendorId: "vendor-1", quantity: 2, price: 45, unit_price: "45" },
-      { line_item_id: 2, item_id: 2, productId: "prod-2", vendorId: "vendor-1", quantity: 1, price: 35, unit_price: "35" },
-    ],
-    totalAmount: 125,
-    status: "completed",
-    deliveryAddress: "123 Main St, Manila",
-    paymentMethod: "cod",
-    createdAt: new Date("2025-10-20"),
-    completedAt: new Date("2025-10-21"),
-  },
-]
+export const mockOrders: Order[] = []
 
-export const mockReviews: Review[] = [
-  {
-    id: "review-1",
-    orderId: "order-1",
-    buyerId: "buyer-1",
-    vendorId: "vendor-1",
-    rating: 5,
-    comment: "Very fresh vegetables! Will order again.",
-    createdAt: new Date("2025-10-21"),
-  },
-]
+export const mockReviews: Review[] = []
 
 export const mockLoyaltyPoints: LoyaltyPoints = {
   buyerId: "buyer-1",
-  points: 450,
-  tier: "silver",
+  points: 0,
+  tier: "bronze",
 }

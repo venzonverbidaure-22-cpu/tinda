@@ -29,21 +29,7 @@ export function useTinderaChat() {
     // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 800))
 
-    // Mock responses based on keywords
-    const lowerMessage = userMessage.toLowerCase()
-    if (lowerMessage.includes("gulay") || lowerMessage.includes("vegetable")) {
-      return "Mayroong fresh vegetables ngayon! Check out Mang Jose sa San Juan - sariwa ang kanyang produce. May discount pa for regular customers! 🥬"
-    } else if (lowerMessage.includes("presyo") || lowerMessage.includes("price")) {
-      return "Best deals ngayong linggo: Kamote - ₱50/kg, Cabbage - ₱30/kg, Tomato - ₱60/kg. Mag-order na para makatipid! 💰"
-    } else if (lowerMessage.includes("delivery") || lowerMessage.includes("tracking")) {
-      return "Para sa delivery options, check your order details sa app. May same-day delivery kami sa selected areas! 🚚 Anong area ka ba?"
-    } else if (lowerMessage.includes("loyalty") || lowerMessage.includes("points")) {
-      return "Earn Suki points sa bawat order! Accumulate points para sa discounts at freebies. Mas maraming bili, mas maraming rewards! 🎁"
-    } else if (lowerMessage.includes("vendor") || lowerMessage.includes("tindahan")) {
-      return "Looking for vendors? Tell me what area you're in, I can recommend the best local vendors near you! 📍"
-    } else {
-      return "That's a great question! To help you better, pwede mo i-refine? Looking for fresh produce, vendors, prices, or something else? 🤔"
-    }
+    return "This is a placeholder response."
   }, [])
 
   const addMessage = useCallback(
