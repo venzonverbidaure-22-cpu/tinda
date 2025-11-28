@@ -1,212 +1,22 @@
-import { db } from '@/db';
-import { stalls, stall_items, images } from '@/db/schema';
-import { sql, or, eq, and } from 'drizzle-orm';
-import { SearchResult } from '@/lib/search';
+import { mockProducts, mockVendors } from '@/lib/mock-data';
+import { Product, Vendor } from '@/lib/types';
 
 export class SearchService {
-  private cache: Map<string, { results: SearchResult[]; timestamp: number }>;
-  private readonly CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+  async searchAll(query: string, includeOutOfStock: boolean = false): Promise<(Product | Vendor)[]> {
+    const lowerCaseQuery = query.toLowerCase();
 
-  constructor() {
-    this.cache = new Map();
-  }
+    const filteredProducts = mockProducts.filter(product => {
+      const matchesQuery = product.product_name.toLowerCase().includes(lowerCaseQuery) ||
+                           product.description.toLowerCase().includes(lowerCaseQuery);
+      const inStock = includeOutOfStock || product.stock > 0;
+      return matchesQuery && inStock;
+    });
 
-  async searchAll(query: string, includeOutOfStock: boolean = false): Promise<SearchResult[]> {
-    if (query.length < 2) return [];
+    const filteredVendors = mockVendors.filter(vendor => {
+      return vendor.stall_name.toLowerCase().includes(lowerCaseQuery) ||
+             vendor.stall_description.toLowerCase().includes(lowerCaseQuery);
+    });
 
-    const cacheKey = `${query}:${includeOutOfStock}`;
-    const cached = this.cache.get(cacheKey);
-    if (cached && Date.now() - cached.timestamp < this.CACHE_TTL) {
-      return cached.results;
-    }
-
-    try {
-      const [stallResults, itemResults] = await Promise.all([
-        this.searchStalls(query),
-        this.searchItems(query, includeOutOfStock),
-      ]);
-
-      const results = [...stallResults, ...itemResults]
-        .sort((a, b) => (b.relevanceScore || 0) - (a.relevanceScore || 0))
-        .slice(0, 10);
-
-      this.cache.set(cacheKey, { results, timestamp: Date.now() });
-      return results;
-    } catch (error) {
-      console.error('Search error:', error);
-      throw error;
-    }
-  }
-
-  private async searchStalls(query: string): Promise<SearchResult[]> {
-    const searchTerm = `%${query.toLowerCase()}%`;
-
-    try {
-      // Get stalls with images using subquery
-      const results = await db
-        .select({
-          stall_id: stalls.stall_id,
-          stall_name: stalls.stall_name,
-          stall_description: stalls.stall_description,
-          category: stalls.category,
-          image_url: images.image_url,
-        })
-        .from(stalls)
-        .leftJoin(
-          images,
-          and(
-            eq(images.stall_id, stalls.stall_id),
-            eq(images.image_type, 'profile')
-          )
-        )
-        .where(
-          or(
-            sql`LOWER(${stalls.stall_name}) LIKE ${searchTerm}`,
-            sql`LOWER(${stalls.category}) LIKE ${searchTerm}`,
-            sql`LOWER(${stalls.stall_description}) LIKE ${searchTerm}`
-          )
-        )
-        .limit(20);
-
-      // Calculate relevance score
-      return results.map((row) => {
-        const name = row.stall_name.toLowerCase();
-        const cat = row.category?.toLowerCase() || '';
-        const desc = row.stall_description?.toLowerCase() || '';
-        const q = query.toLowerCase();
-
-        let relevanceScore = 20;
-        if (name === q) relevanceScore = 100;
-        else if (name.startsWith(q)) relevanceScore = 80;
-        else if (name.includes(q)) relevanceScore = 60;
-        else if (cat.includes(q)) relevanceScore = 50;
-        else if (desc.includes(q)) relevanceScore = 40;
-
-        return {
-          id: row.stall_id,
-          name: row.stall_name,
-          type: 'stall' as const,
-          description: row.stall_description || undefined,
-          category: row.category,
-          imageUrl: row.image_url || undefined,
-          relevanceScore,
-        };
-      });
-    } catch (error) {
-      console.error('Search stalls error:', error);
-      return [];
-    }
-  }
-
-  private async searchItems(query: string, includeOutOfStock: boolean): Promise<SearchResult[]> {
-    const searchTerm = `%${query.toLowerCase()}%`;
-
-    try {
-      const whereConditions = [
-        or(
-          sql`LOWER(${stall_items.item_name}) LIKE ${searchTerm}`,
-          sql`LOWER(${stall_items.item_description}) LIKE ${searchTerm}`,
-          sql`LOWER(${stalls.stall_name}) LIKE ${searchTerm}`
-        ),
-      ];
-
-      // Add stock filter if needed
-      if (!includeOutOfStock) {
-        whereConditions.push(eq(stall_items.in_stock, true));
-      }
-
-      const results = await db
-        .select({
-          item_id: stall_items.item_id,
-          item_name: stall_items.item_name,
-          item_description: stall_items.item_description,
-          price: stall_items.price,
-          in_stock: stall_items.in_stock,
-          stall_name: stalls.stall_name,
-          category: stalls.category,
-          image_url: images.image_url,
-        })
-        .from(stall_items)
-        .innerJoin(stalls, eq(stalls.stall_id, stall_items.stall_id))
-        .leftJoin(
-          images,
-          and(
-            eq(images.item_id, stall_items.item_id),
-            eq(images.image_type, 'product')
-          )
-        )
-        .where(and(...whereConditions))
-        .limit(20);
-
-      // Calculate relevance score
-      return results.map((row) => {
-        const name = row.item_name.toLowerCase();
-        const desc = row.item_description?.toLowerCase() || '';
-        const stallName = row.stall_name.toLowerCase();
-        const q = query.toLowerCase();
-
-        let relevanceScore = 20;
-        if (name === q) relevanceScore = 100;
-        else if (name.startsWith(q)) relevanceScore = 80;
-        else if (name.includes(q)) relevanceScore = 60;
-        else if (desc.includes(q)) relevanceScore = 50;
-        else if (stallName.includes(q)) relevanceScore = 40;
-
-        return {
-          id: row.item_id,
-          name: row.item_name,
-          type: 'item' as const,
-          description: row.item_description || undefined,
-          price: row.price ? parseFloat(row.price.toString()) : undefined,
-          category: row.category,
-          imageUrl: row.image_url || undefined,
-          stallName: row.stall_name,
-          inStock: row.in_stock || false,
-          relevanceScore,
-        };
-      });
-    } catch (error) {
-      console.error('Search items error:', error);
-      return [];
-    }
-  }
-
-  async searchByCategory(category: string): Promise<SearchResult[]> {
-    try {
-      const results = await db
-        .select({
-          stall_id: stalls.stall_id,
-          stall_name: stalls.stall_name,
-          stall_description: stalls.stall_description,
-          category: stalls.category,
-          image_url: images.image_url,
-        })
-        .from(stalls)
-        .leftJoin(
-          images,
-          and(
-            eq(images.stall_id, stalls.stall_id),
-            eq(images.image_type, 'profile')
-          )
-        )
-        .where(sql`LOWER(${stalls.category}) = LOWER(${category})`)
-        .limit(10);
-
-      return results.map((row) => ({
-        id: row.stall_id,
-        name: row.stall_name,
-        type: 'stall' as const,
-        description: row.stall_description || undefined,
-        category: row.category,
-        imageUrl: row.image_url || undefined,
-      }));
-    } catch (error) {
-      console.error('Search by category error:', error);
-      return [];
-    }
-  }
-
-  clearCache() {
-    this.cache.clear();
+    return [...filteredProducts, ...filteredVendors];
   }
 }

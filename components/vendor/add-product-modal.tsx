@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card"
 import { X } from "lucide-react"
 import { triggerProductListingsRefresh } from "./product-refresh"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { API_BASE_URL } from "@/lib/utils"
 
 const BACKEND_URL = "http://localhost:3001"
 

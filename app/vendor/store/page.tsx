@@ -8,8 +8,9 @@ import { useState, useEffect } from "react"
 import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
 import axios from "axios"
+import { API_BASE_URL } from "@/lib/utils"
 
-const BACKEND_URL = "http://localhost:3001";
+const BACKEND_URL = API_BASE_URL
 
 export default function VendorStorePage() {
   const [isEditing, setIsEditing] = useState(false)

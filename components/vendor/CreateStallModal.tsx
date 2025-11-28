@@ -14,22 +14,31 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
-import { CurrentUser } from "@/lib/utils"
+import { API_BASE_URL, CurrentUser } from "@/lib/utils"
 
 interface CreateStallModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
+// Define the market options - these will populate stall_address directly
+const ILOILO_MARKETS = [
+  "Iloilo Central Market, J.M. Basa St, Iloilo City Proper",
+  "Jaro Plaza Market, Jaro, Iloilo City", 
+  "La Paz Public Market, Rizal St, La Paz, Iloilo City",
+  "Mandurriao Public Market, Benigno Aquino Ave, Mandurriao",
+  "Arevalo Public Market, Arevalo, Iloilo City"
+];
+
 export function CreateStallModal({ isOpen, onClose }: CreateStallModalProps) {
   const [stallData, setStallData] = useState({
     stall_name: "",
     stall_description: "",
     category: "",
-    stall_address: "",
-    stall_city: "",
-    stall_state: "", // Fixed: matches backend field name
-    stall_zipcode: "",
+    stall_address: "", // This will store the selected market address
+    stall_city: "Iloilo City", // Auto-filled for all Iloilo markets
+    stall_state: "Iloilo", // Auto-filled
+    stall_zipcode: "5000", // Auto-filled
     stall_country: "Philippines",
   })
   const [stallImages, setStallImages] = useState({
@@ -54,6 +63,17 @@ export function CreateStallModal({ isOpen, onClose }: CreateStallModalProps) {
     setStallData((prev) => ({ ...prev, [field]: value }))
   }
 
+  // Handle market selection - sets stall_address and auto-fills other fields
+  const handleMarketChange = (marketAddress: string) => {
+    setStallData((prev) => ({
+      ...prev,
+      stall_address: marketAddress,
+      stall_city: "Iloilo City", // Auto-fill for consistency
+      stall_state: "Iloilo", // Auto-fill for consistency  
+      stall_zipcode: "5000" // Auto-fill for consistency
+    }));
+  }
+
   const handleFileChange = (field: "icon" | "banner", file: File | null) => {
     if (file) {
       // Validate file type and size
@@ -72,100 +92,94 @@ export function CreateStallModal({ isOpen, onClose }: CreateStallModalProps) {
   }
 
   const handleSubmit = async () => {
-  const currentUser = CurrentUser();
-  console.log("Current user:", currentUser);
-  
-
-  const userId = currentUser?.id;
-  console.log("Current user ID:", userId);
-   
-  if (!userId) {
-    alert("Please login to create a stall");
-    return;
-  }
-
-  // Validate required fields
-  if (!stallData.stall_name || !stallData.category || 
-      !stallData.stall_description || !stallData.stall_address) {
-    alert("❌ Please fill in all required fields (Name, Category, Description, Address)");
-    return;
-  }
-
-  setIsSubmitting(true);
-  try {
-    // Get the JWT token from storage
-    const token = localStorage.getItem("token") || sessionStorage.getItem("token");
-    console.log("JWT Token:", token); // Debug: check if token exists
-      console.log("=== TOKEN ANALYSIS ===");
-      console.log("Full token:", token);
-    if (!token) {
-      alert("❌ Authentication token not found. Please log in again.");
+    const currentUser = CurrentUser();
+    console.log("Current user:", currentUser);
+    
+    const userId = currentUser?.id;
+    console.log("Current user ID:", userId);
+     
+    if (!userId) {
+      alert("Please login to create a stall");
       return;
     }
 
-    const formData = new FormData();
-    
-    // Append all stall data
-    Object.entries(stallData).forEach(([key, value]) => formData.append(key, value));
-    
-    // Append user_id
-    formData.append("user_id", userId.toString());
-
-    // Append images with correct field names
-    if (stallImages.icon) formData.append("icon_image", stallImages.icon);
-    if (stallImages.banner) formData.append("banner_image", stallImages.banner);
-
-    // Debug: log what's being sent
-    console.log("FormData contents:");
-    for (const pair of formData.entries()) {
-      console.log(pair[0], pair[1]);
+    // Validate required fields - now using stall_address for market location
+    if (!stallData.stall_name || !stallData.category || 
+        !stallData.stall_description || !stallData.stall_address) {
+      alert("❌ Please fill in all required fields (Name, Category, Description, Market Location)");
+      return;
     }
 
-    // ✅ CRITICAL: Add Authorization header with Bearer token
-    const res = await axios.post("http://localhost:3001/api/stalls", formData, {
-      headers: { 
-        "Content-Type": "multipart/form-data",
-        "Authorization": `Bearer ${token}` // This is what fixes the 401 error
-      },
-    });
+    setIsSubmitting(true);
+    try {
+      const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+      console.log("JWT Token:", token);
 
-    alert("✅ Stall created successfully!");
-    console.log(res.data);
-    if (res.data && res.data.stall_id) {
-      localStorage.setItem("selectedStallId", res.data.stall_id);
-    }
-    onClose();
-    window.location.href = "/vendor/dashboard";
+      if (!token) {
+        alert("❌ Authentication token not found. Please log in again.");
+        return;
+      }
 
-    // Reset form
-    setStallData({
-      stall_name: "",
-      stall_description: "",
-      // vendor_contact: "", // Add this if missing.
-      category: "",
-      stall_address: "",
-      stall_city: "",
-      stall_state: "",
-      stall_zipcode: "",
-      stall_country: "Philippines",
-    });
-    setStallImages({ icon: null, banner: null });
-    setPreview({ icon: "", banner: "" });
-  } catch (error: any) {
-    console.error("Error creating stall:", error);
-    
-    // Better error handling
-    if (error.response?.status === 401) {
-      alert("❌ Authentication failed. Please log in again.");
-    } else if (error.response?.data?.error) {
-      alert(`❌ ${error.response.data.error}`);
-    } else {
-      alert("❌ Error creating stall. Please try again.");
+      const formData = new FormData();
+      
+      // Append all stall data
+      Object.entries(stallData).forEach(([key, value]) => formData.append(key, value));
+      
+      // Append user_id
+      formData.append("user_id", userId.toString());
+
+      // Append images with correct field names
+      if (stallImages.icon) formData.append("icon_image", stallImages.icon);
+      if (stallImages.banner) formData.append("banner_image", stallImages.banner);
+
+      // Debug: log what's being sent
+      console.log("FormData contents:");
+      for (const pair of formData.entries()) {
+        console.log(pair[0], pair[1]);
+      }
+
+      const res = await axios.post(`${API_BASE_URL}/api/stalls`, formData, {
+        headers: { 
+          "Content-Type": "multipart/form-data",
+          "Authorization": `Bearer ${token}`
+        },
+      });
+
+      alert("✅ Stall created successfully!");
+      console.log(res.data);
+      if (res.data && res.data.stall_id) {
+        localStorage.setItem("selectedStallId", res.data.stall_id);
+      }
+      onClose();
+      window.location.href = "/vendor/dashboard";
+
+      // Reset form
+      setStallData({
+        stall_name: "",
+        stall_description: "",
+        category: "",
+        stall_address: "",
+        stall_city: "Iloilo City",
+        stall_state: "Iloilo",
+        stall_zipcode: "5000",
+        stall_country: "Philippines",
+      });
+      setStallImages({ icon: null, banner: null });
+      setPreview({ icon: "", banner: "" });
+    } catch (error: any) {
+      console.error("Error creating stall:", error);
+      
+      if (error.response?.status === 401) {
+        alert("❌ Authentication failed. Please log in again.");
+      } else if (error.response?.data?.error) {
+        alert(`❌ ${error.response.data.error}`);
+      } else {
+        alert("❌ Error creating stall. Please try again.");
+      }
+    } finally {
+      setIsSubmitting(false);
     }
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -245,30 +259,45 @@ export function CreateStallModal({ isOpen, onClose }: CreateStallModalProps) {
             </Select>
           </div>
 
+          {/* Market Location Dropdown - Uses stall_address directly */}
           <div className="space-y-2">
-            <Label>Address *</Label>
-            <Input
-              value={stallData.stall_address}
-              onChange={(e) => handleChange("stall_address", e.target.value)}
-              placeholder="Enter full street address"
-            />
+            <Label>Market Location *</Label>
+            <Select onValueChange={handleMarketChange} value={stallData.stall_address}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select a market in Iloilo" />
+              </SelectTrigger>
+              <SelectContent>
+                {ILOILO_MARKETS.map((market, index) => (
+                  <SelectItem key={index} value={market}>
+                    {market.split(",")[0]} {/* Show only market name in dropdown */}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {/* Display selected market address for confirmation */}
+            {stallData.stall_address && (
+              <div className="text-sm text-gray-600 mt-2 p-2 bg-gray-50 rounded">
+                <strong>Selected Location:</strong> {stallData.stall_address}
+              </div>
+            )}
           </div>
 
+          {/* Display auto-filled location fields (read-only) */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>City</Label>
               <Input
                 value={stallData.stall_city}
-                onChange={(e) => handleChange("stall_city", e.target.value)}
-                placeholder="City"
+                readOnly
+                className="bg-gray-50"
               />
             </div>
             <div className="space-y-2">
               <Label>State/Province</Label>
               <Input
                 value={stallData.stall_state}
-                onChange={(e) => handleChange("stall_state", e.target.value)}
-                placeholder="State or Province"
+                readOnly
+                className="bg-gray-50"
               />
             </div>
           </div>
@@ -277,8 +306,8 @@ export function CreateStallModal({ isOpen, onClose }: CreateStallModalProps) {
             <Label>Zip Code</Label>
             <Input
               value={stallData.stall_zipcode}
-              onChange={(e) => handleChange("stall_zipcode", e.target.value)}
-              placeholder="Zip code"
+              readOnly
+              className="bg-gray-50"
             />
           </div>
 

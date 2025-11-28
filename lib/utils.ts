@@ -9,6 +9,7 @@ export function cn(...inputs: ClassValue[]) {
 // lib/utils.ts
 // lib/utils.ts
 export function CurrentUser() {
+  if (typeof window === 'undefined') return null; // Guard localStorage access
   try {
     const token = localStorage.getItem("token");
     
@@ -25,7 +26,7 @@ export function CurrentUser() {
     
     // Extract user info - your token structure might be different
     const userInfo = {
-      id: payload.id, // Try direct id first
+      id: payload._id, // Try direct id first
       email: payload.email,
       role: payload.role
     };
@@ -51,3 +52,5 @@ export function CurrentUser() {
     return null;
   }
 }
+
+export const API_BASE_URL = 'https://tindabackend-6q7u4tkv1-tindateam.vercel.app';

@@ -10,6 +10,7 @@ export interface User {
   role: UserRole
   created_at: string
   updated_at: string
+  token: string
 }
 
 
@@ -47,6 +48,8 @@ export interface Location {
   name: string
   region: string
 }
+// Added this comment to force a re-evaluation of types
+
 
 export interface Vendor {
   stall_id: string
@@ -64,9 +67,10 @@ export interface Vendor {
   banner_photo:string
   rating: number
   vendor_contact: string
-  id: number
+  id: string
   full_name: string
   totalSales: number
+  revenue: number
   //? Original interface
   // id: string
   // name: string
@@ -109,8 +113,8 @@ export interface Product {
   // name: string
   // category: string
   
-  in_stock: boolean
-  image: string
+  // in_stock: boolean // Removed redundant property
+  // image: string // Removed redundant property
 }
 
 export interface Image {

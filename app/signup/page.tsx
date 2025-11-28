@@ -14,6 +14,7 @@ import Link from "next/link";
 import { Navbar } from "@/components/navbar";
 import type { UserRole } from "@/lib/types";
 import { json } from "stream/consumers";
+import { API_BASE_URL } from "@/lib/utils";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -50,7 +51,7 @@ export default function SignupPage() {
         return;
       }
 
-      const res = await fetch("http://localhost:3001/api/auth/register", {
+      const res = await fetch(`${API_BASE_URL}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -67,7 +68,7 @@ export default function SignupPage() {
         setIsLoading(false);
         return;
       }
-      const loginRes = await fetch("http://localhost:3001/api/auth/login", {
+      const loginRes = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password, role }),

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { useApp } from "@/lib/context"
 import { ShoppingCart, Check, X } from "lucide-react"
 import { useState } from "react"
+import { API_BASE_URL } from "@/lib/utils"
 
 interface ProductCardProps {
   product: Product
@@ -23,7 +24,7 @@ export function ProductCard({ product }: ProductCardProps) {
 
   const itemId = parseInt(product.product_id)
   const isInCart = cart.some((item) => item.item_id === itemId)
-  const isOutOfStock = !product.in_stock || product.stock === 0
+  const isOutOfStock = product.stock === 0
 
   const handleAddToCart = () => {
     if (!isOutOfStock) {

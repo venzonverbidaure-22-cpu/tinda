@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
 import { useApp } from "@/lib/context"
 import { X } from "lucide-react"
+import { API_BASE_URL } from "@/lib/utils"
 
 interface CheckoutModalProps {
   onClose: () => void
@@ -33,7 +34,7 @@ export function CheckoutModal({ onClose, totalAmount }: CheckoutModalProps) {
       }
 
       // CHANGE: Use the main checkout endpoint instead of /simple
-      const response = await fetch("http://localhost:3001/api/checkout", {
+      const response = await fetch(`${API_BASE_URL}/api/checkout`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -69,7 +70,11 @@ export function CheckoutModal({ onClose, totalAmount }: CheckoutModalProps) {
 
     } catch (error) {
       console.error("Checkout error:", error)
-      alert(error.message || "Failed to place order. Please try again.")
+      if (error instanceof Error) {
+        alert(error.message)
+      } else {
+        alert("Failed to place order. Please try again.")
+      }
     } finally {
       setIsSubmitting(false)
     }

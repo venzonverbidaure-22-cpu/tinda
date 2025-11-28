@@ -13,21 +13,49 @@ import {
 } from "@/components/ui/select"
 import { useState, useEffect } from "react"
 import axios from "axios"
-import { CurrentUser } from "@/lib/utils"
+import { API_BASE_URL, CurrentUser } from "@/lib/utils"
 
-const BACKEND_URL = "http://localhost:3001";
+const BACKEND_URL = API_BASE_URL
 
 interface Stall {
   stall_id: string;
   stall_name: string;
   stall_description: string;
   icon_url?: string;
+  stall_icon?: string; // Add this field
 }
 
 export function StallProfileCard() {
   const [stalls, setStalls] = useState<Stall[]>([]);
   const [selectedStall, setSelectedStall] = useState<Stall | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  // ✅ FIXED: Proper image URL handling for Cloudinary URLs
+  const getImageUrl = (imagePath: string | null | undefined) => {
+    if (!imagePath) {
+      console.log("No image path provided")
+      return "/placeholder.svg"
+    }
+    
+    console.log("Original image path:", imagePath)
+    
+    // If it's already a full URL (starts with http), return it directly
+    if (imagePath.startsWith('http')) {
+      console.log("Already a full URL, returning directly:", imagePath)
+      return imagePath
+    }
+    
+    // Only process local file paths (for backward compatibility)
+    const cleanPath = imagePath.replace(/\\/g, '/')
+    const filename = cleanPath.replace(/^uploads\//, '')
+    const finalUrl = `${BACKEND_URL}/uploads/${filename}`
+    
+    console.log("Cleaned path:", cleanPath)
+    console.log("Filename:", filename)
+    console.log("Final URL:", finalUrl)
+    
+    return finalUrl
+  }
 
   useEffect(() => {
     const fetchStalls = async () => {
@@ -90,7 +118,12 @@ export function StallProfileCard() {
     }
   };
 
-
+  // ✅ Get the correct image URL
+  const stallIconUrl = selectedStall?.stall_icon 
+    ? getImageUrl(selectedStall.stall_icon) 
+    : selectedStall?.icon_url 
+      ? getImageUrl(selectedStall.icon_url)
+      : null;
 
   return (
     <Card className="p-6">
@@ -124,11 +157,15 @@ export function StallProfileCard() {
         <div className="rounded-lg border border-border bg-muted/30 p-4">
           <div className="flex items-start gap-4">
             <div className="rounded-lg bg-primary/10 w-20 h-20 flex items-center justify-center">
-              {selectedStall?.icon_url ? (
+              {stallIconUrl ? (
                 <img
-                  src={`${BACKEND_URL}/${selectedStall.icon_url}`}
+                  src={stallIconUrl}
                   alt="Stall Icon"
                   className="h-full w-full object-cover rounded-lg"
+                  onError={(e) => {
+                    console.log("Stall icon failed to load:", stallIconUrl)
+                    e.currentTarget.src = "/placeholder.svg"
+                  }}
                 />
               ) : (
                 <User className="h-12 w-12 text-primary" />
@@ -140,8 +177,6 @@ export function StallProfileCard() {
             </div>
           </div>
         </div>
-
-
 
         {/* Missing Items */}
         {selectedStall && (!selectedStall.stall_name || !selectedStall.stall_description) && (
@@ -165,5 +200,3 @@ export function StallProfileCard() {
     </Card>
   )
 }
-
-

@@ -36,7 +36,7 @@ export function TinderaChatPanel({ isOpen, onClose }: TinderaChatPanelProps) {
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault()
     const message = inputRef.current?.value.trim()
-    if (message) {
+    if (message && inputRef.current) { // Added check for inputRef.current
       addMessage(message)
       inputRef.current.value = ""
     }

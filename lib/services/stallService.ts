@@ -1,11 +1,12 @@
 import axios from 'axios';
+import { API_BASE_URL } from '../utils';
 
-const API_URL = 'http://localhost:3001/api/stalls';
+const API_URL = API_BASE_URL
 
 export const getStallsByVendor = async (vendorId: number) => {
   try {
     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-    const response = await axios.get(`${API_URL}/vendor/${vendorId}`, {
+    const response = await axios.get(`${API_URL}/api/stalls/vendor/${vendorId}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -20,7 +21,7 @@ export const getStallsByVendor = async (vendorId: number) => {
 export const getStallById = async (stallId: number) => {
   try {
     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-    const response = await axios.get(`${API_URL}/${stallId}`, {
+    const response = await axios.get(`${API_URL}/api/stalls/${stallId}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -36,7 +37,7 @@ export const updateStallStatus = async (stallId: number, status: 'active' | 'ina
   try {
     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     const response = await axios.patch(
-      `${API_URL}/${stallId}`,
+      `${API_URL}/api/stalls/${stallId}`,
       { status },
       {
         headers: {

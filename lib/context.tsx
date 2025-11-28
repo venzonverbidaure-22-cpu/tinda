@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect } from "react"
 import type { UserRole, User, UserStatus, LineItem } from "./types"
+import { API_BASE_URL } from "./utils"
 
 interface AppContextType {
   currentUser: User | null
@@ -36,6 +37,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   // Token helper
   // ------------------------
   const getToken = () => {
+    if (typeof window === 'undefined') return null; // Guard localStorage access
     try {
       return JSON.parse(localStorage.getItem("tinda_session") || "{}").token || null
     } catch {
@@ -52,7 +54,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     setIsLoading(true)
     try {
-      const res = await fetch("http://localhost:3001/api/cart", {
+      const res = await fetch(`${API_BASE_URL}/api/cart`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       if (!res.ok) return setCart([])
@@ -81,6 +83,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   // Load session on mount
   // ------------------------
   useEffect(() => {
+    if (typeof window === 'undefined') return; // Guard localStorage access
     const session = localStorage.getItem("tinda_session")
     const loc = localStorage.getItem("tinda_location")
 
@@ -91,7 +94,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const { token } = JSON.parse(session)
       if (!token) return
 
-      fetch("http://localhost:3001/api/auth/profile", {
+      fetch(`${API_BASE_URL}/api/auth/profile`, {
         headers: { Authorization: `Bearer ${token}` },
       })
         .then((r) => (r.ok ? r.json() : Promise.reject()))
@@ -132,7 +135,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   // Login
   // ------------------------
   const login = async (email: string, password: string, role: UserRole) => {
-    const res = await fetch("http://localhost:3001/api/auth/login", {
+    const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password, role }),
@@ -177,11 +180,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const found = prev.find((i) => i.item_id === item.item_id)
       return found
         ? prev.map((i) => ({ ...i, quantity: i.quantity + item.quantity }))
-        : [...prev, { ...item, line_item_id: 0, unit_price: 0, stall: null, product: null }]
+        : [...prev, { ...item, line_item_id: 0, unit_price: "0", stall: undefined, product: undefined, productId: String(item.item_id), vendorId: "unknown-vendor", price: 0 }]
     })
 
     try {
-      const res = await fetch("http://localhost:3001/api/cart/items", {
+      const res = await fetch(`${API_BASE_URL}/api/cart/items`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
         body: JSON.stringify({ item_id: item.item_id, quantity: item.quantity }),
@@ -203,7 +206,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setCart((prev) => prev.filter((c) => c.item_id !== item_id))
 
     try {
-      const res = await fetch(`http://localhost:3001/api/cart/items/${found.line_item_id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/cart/items/${found.line_item_id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       })
@@ -224,7 +227,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setCart((prev) => prev.map((c) => (c.item_id === item_id ? { ...c, quantity } : c)))
 
     try {
-      const res = await fetch(`http://localhost:3001/api/cart/items/${found.line_item_id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/cart/items/${found.line_item_id}`, {
         method: "PUT",
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
         body: JSON.stringify({ quantity }),
@@ -241,7 +244,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (!token) return
     setCart([])
     try {
-      const res = await fetch("http://localhost:3001/api/cart/clear", {
+      const res = await fetch(`${API_BASE_URL}/api/cart/clear`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       })

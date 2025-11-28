@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
+import { API_BASE_URL, cn } from "@/lib/utils";
 import { SearchResult } from "@/lib/search";
 import Image from "next/image";
 
@@ -12,7 +12,7 @@ interface SearchBarProps {
   className?: string;
 }
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+const BACKEND_URL = API_BASE_URL;
 
 export function SearchBar({ className }: SearchBarProps) {
   const [query, setQuery] = useState("");
@@ -59,25 +59,34 @@ export function SearchBar({ className }: SearchBarProps) {
     setError(null);
 
     try {
-      const response = await fetch(
-        `${BACKEND_URL}/search/suggest?q=${encodeURIComponent(searchQuery)}`,
-        { signal: abortControllerRef.current.signal }
-      );
+      const url = `${BACKEND_URL}/api/search/suggest?q=${encodeURIComponent(searchQuery)}`;
+      console.log('Fetching from:', url);
+      
+      const response = await fetch(url, { 
+        signal: abortControllerRef.current.signal,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      console.log('Response status:', response.status);
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || "Search failed");
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
+        throw new Error(`Search failed (${response.status})`);
       }
 
       const data = await response.json();
+      console.log('Search results:', data);
 
-      setSuggestions(data.results);
-      setIsOpen(data.results.length > 0);
+      setSuggestions(data.results || []);
+      setIsOpen((data.results || []).length > 0);
       setSelectedIndex(-1);
     } catch (err: any) {
       if (err.name !== "AbortError") {
         console.error("Search failed:", err);
-        setError(err.message);
+        setError(err.message || "Search failed");
         setSuggestions([]);
         setIsOpen(false);
       }
@@ -116,12 +125,17 @@ export function SearchBar({ className }: SearchBarProps) {
     setIsOpen(false);
     setSelectedIndex(-1);
 
-    const url = result.type === "stall" ? `/stalls/${result.id}` : `/items/${result.id}`;
+    // Vendor has dynamic route [id], products uses query param
+    const url = result.type === "stall" 
+      ? `/vendor/${result.id}`
+      : `/products?id=${result.id}`;
+    
+    console.log('Navigating to:', url);
     router.push(url);
   };
 
   const formatPrice = (price?: number | null) =>
-  typeof price === "number" ? `₱${price.toFixed(2)}` : "";
+    typeof price === "number" ? `₱${price.toFixed(2)}` : "";
 
   return (
     <div ref={searchRef} className={cn("relative w-full", className)}>
